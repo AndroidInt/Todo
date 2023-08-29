@@ -1,7 +1,9 @@
 package com.androidint.todo.repository.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 
@@ -40,11 +42,24 @@ data class TimeTask(
     val startMinute: Int = 0,
     val endHour: Int = 0,
     val endMinute: Int = 0
-)
+): Comparable<TimeTask> {
+    override fun compareTo(other: TimeTask): Int {
+        return "${other.startHour.toString()}${other.startMinute.toString()}".toInt()
+    }
 
-@Entity
+    fun eventDuration():Int{
+        val hour =   endHour - startHour
+        val min = endMinute - startMinute
+        return ( hour * 60 ) + min
+    }
+    fun offsetTimeToMinutes():Int{
+        return startHour * 60 + startMinute
+    }
+}
+
+@Entity (indices = [Index(value = ["name"], unique = true)])
 data class Category(
-    val name: String = "Inbox"
+    @ColumnInfo(name = "name") val name: String = "Inbox"
 ) {
     @PrimaryKey(autoGenerate = true)
     var categoryId: Int = 0
