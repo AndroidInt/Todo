@@ -11,6 +11,7 @@ android {
     namespace = "com.androidint.todo"
     compileSdk = 33
 
+
     defaultConfig {
         applicationId = "com.androidint.todo"
         minSdk = 24
@@ -39,7 +40,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
