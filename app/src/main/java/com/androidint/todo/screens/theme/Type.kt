@@ -1,4 +1,4 @@
-package com.androidint.todo.ui.theme
+package com.androidint.todo.screens.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

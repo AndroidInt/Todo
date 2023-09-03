@@ -11,9 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.androidint.todo.ui.theme.TodoTheme
-import java.text.SimpleDateFormat
-import java.util.Date
+import com.androidint.todo.screens.theme.TodoTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
