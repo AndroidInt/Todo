@@ -22,6 +22,7 @@ data class Task(
     val timeDuration: TimeTask,
     val priority: Int = 1,
     var done: Boolean = false
+
 ) {
     @PrimaryKey(autoGenerate = true)
     var taskId: Int = 0

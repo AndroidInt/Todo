@@ -19,7 +19,7 @@ interface TaskDao {
     suspend fun insert(task: Task)
 
     @Query("SELECT * FROM Task")
-    fun getAll(): Flow<List<Task>>
+    fun getAll(): List<Task>
 
     @Query("SELECT * FROM Task ts WHERE ts.done == 0 ")
     fun getAllNoDone(): Flow<List<Task>>
@@ -32,7 +32,7 @@ interface TaskDao {
 
     @Transaction
     @Query("SELECT * FROM Category")
-    fun getCategoriesWithTasks(): Flow<List<CategoryWithTasks>>
+    fun getCategoriesWithTasks(): List<CategoryWithTasks>
 
     @Update
     suspend fun updateTask(task: Task)

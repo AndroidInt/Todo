@@ -4,24 +4,38 @@ import com.androidint.todo.repository.model.CategoryWithTasks
 import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.room.TaskDao
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 
 class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
 
-    suspend fun insert(task: Task){
+
+    fun exceptionHandling(){
+
+    }
+
+
+    suspend fun insert(task: Task) {
         return taskDao.insert(task)
     }
 
-    suspend fun getAll(): Flow<List<Task>> {
-        return taskDao.getAll()
-    }
+    fun getAll() =
+        flow {
+            try {
+            emit(taskDao.getAll())
+
+            }catch (e: NullPointerException){
+                print("fucking nulllllllllll")
+            }
+        }
+
 
     suspend fun getAllNoDone(): Flow<List<Task>> {
         return taskDao.getAllNoDone()
     }
 
-    suspend fun delete(task: Task){
+    suspend fun delete(task: Task) {
         taskDao.delete(task)
     }
 
@@ -29,11 +43,18 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.findById(id)
     }
 
-    suspend fun getCategoriesWithTasks():Flow<List<CategoryWithTasks>>{
-        return taskDao.getCategoriesWithTasks()
-    }
+    fun getCategoriesWithTasks() =
+        flow {
+            try {
+            emit(taskDao.getCategoriesWithTasks())
+            }catch (e: NullPointerException){
+                print("nulllll")
+            }
 
-    suspend fun updateTask(task : Task){
+        }
+
+
+    suspend fun updateTask(task: Task) {
         return taskDao.updateTask(task)
     }
 

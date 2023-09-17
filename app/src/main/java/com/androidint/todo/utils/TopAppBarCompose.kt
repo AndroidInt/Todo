@@ -1,5 +1,6 @@
 package com.androidint.todo.utils
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,12 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun TopAppBarCompose(title: String,
                      ) {
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, "This is my text to send.")
+        type = "text/plain"
+    }
+    val shareIntent = Intent.createChooser(sendIntent, null)
     val context = LocalContext.current
 
         Column {
@@ -40,7 +47,7 @@ fun TopAppBarCompose(title: String,
                         Icon(Icons.Filled.Menu, null)
                     }
                 }, actions = {
-                    IconButton(onClick = {/* Do Something*/ }) {
+                    IconButton(onClick = {context.startActivity(shareIntent)}) {
                         Icon(Icons.Filled.Share, null)
                     }
                     IconButton(onClick = {

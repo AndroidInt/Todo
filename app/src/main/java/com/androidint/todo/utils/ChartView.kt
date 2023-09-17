@@ -10,7 +10,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.room.PrimaryKey
 
 
 @Composable
@@ -25,8 +27,8 @@ fun ChartView(
 //        listArc.add(Arc(Color.Blue, percentage, (index+1).toFloat()))
 //    }
     listArc.add(Arc(Color.Blue, 10.toFloat(), 15.toFloat()))
-    listArc.add(Arc(Color.Green, 35.toFloat(), 15.toFloat()))
-    listArc.add(Arc(Color.Red, 60.toFloat(), 15.toFloat()))
+    listArc.add(Arc(Color.Green, 35.toFloat(), 30.toFloat()))
+    listArc.add(Arc(Color.Red, 60.toFloat(), 45.toFloat()))
     CircleGraph(
         listArc
     )
@@ -41,12 +43,12 @@ fun CircleGraph(arcs: List<Arc>) {
 
     Canvas(
         modifier = Modifier
-            .size(size = 200.dp)
+
     ) {
 
         for (item in arcs) {
             drawCircle(
-                color = Color.LightGray,
+                color = Color.White,
                 radius = 0.5F * item.level * size.minDimension / 4F,
                 center = Offset(
                     size.minDimension / 2F,
@@ -69,4 +71,9 @@ fun CircleGraph(arcs: List<Arc>) {
             )
         }
     }
+}
+@Preview
+@Composable
+private fun previewChart() {
+    ChartView()
 }
