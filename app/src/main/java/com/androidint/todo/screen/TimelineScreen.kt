@@ -2,10 +2,13 @@ package com.androidint.todo.screen
 
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,12 +18,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
+//import androidx.compose.ui.layout.RootMeasurePolicy.measure
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -30,53 +38,161 @@ import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TimeTask
 import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.DataStore
+import java.io.Serializable
+import java.util.Calendar
 import kotlin.math.roundToInt
+
+
 
 
 @Composable
 fun EventLayout(
     modifier: Modifier = Modifier,
     tasks: List<Task>,
-    content: @Composable (task: Task) -> Unit = { BasicEvent(task = it) }
+    timeBar: @Composable (hour: Int, minute: Int) -> Unit = { hour, minute ->
+        val hourHeight = 120.dp
+        Box(modifier = Modifier
+            .height(hourHeight)
+            .taskData(null, false)) {
+            BasicSidebarLabel(hour, minute)
+        }
+    },
+    content: @Composable (task: Task) -> Unit = {
+        BasicEvent(task = it)
+
+    }
 ) {
     val hourHeight = 120.dp
+    val time = remember {
+        mutableStateOf(Calendar.getInstance().get(Calendar.MINUTE)
+        +Calendar.getInstance().get(Calendar.HOUR) * 60
+        )
+    }
     Layout(
         modifier = modifier,
         content = {
+
+
+            (0..23).forEach {
+                timeBar(it, 0)
+            }
+
             tasks.sortedBy(Task::timeDuration).forEach { task ->
-                Box(modifier = Modifier.taskData(task)) {
+                Box(
+                    modifier = Modifier
+                        .taskData(task, false)
+                ) {
                     content(task)
                 }
             }
+            //current time line
+            // TODO("if you are in the current day then current time should be showed")
+
+            Row(
+                modifier = Modifier
+                    .taskData(null, true)
+            ) {
+                Canvas(modifier = Modifier) {
+
+                    drawCircle(Color.Blue, radius = 4.dp.toPx())
+
+                }
+
+
+                Box(modifier = Modifier) {
+                    Divider(
+                        Modifier
+                            .height(1.dp)
+                            .fillMaxWidth(), color = Color.Blue
+                    )
+                }
+            }
+
+
         }
     )
     { measurables, constraints ->
         val height = hourHeight.roundToPx() * 24
         val placeableWithTasks = measurables.map { measurable ->
-            val task = measurable.parentData as Task
+
+            val task: Task? = (measurable.parentData as TaskDataModifier).task
+            val dividerExist = (measurable.parentData as TaskDataModifier).timeBarExist
+
+
             val taskHeight =
-                ((task.timeDuration.eventDuration() / 60f) * hourHeight.toPx()).roundToInt()
-            val placeable =
-                measurable.measure(constraints.copy(minHeight = taskHeight, maxHeight = taskHeight))
-            Pair(placeable, task)
-        }
-        layout(constraints.maxWidth, height) {
-            placeableWithTasks.forEach { (placeable, task) ->
-                val taskOffsetMinutes = task.timeDuration.offsetTimeToMinutes()
-                val taskY = ((taskOffsetMinutes / 60f) * hourHeight.toPx()).roundToInt()
-                placeable.place(0, taskY)
+                ((task?.timeDuration?.eventDuration()
+                    ?.div(60f))?.times(hourHeight.toPx()))?.roundToInt()
+
+            val placeable = if (task == null) {
+                measurable.measure(constraints)
+            } else {
+                taskHeight?.let { constraints.copy(minHeight = it, maxHeight = it) }
+                    ?.let { measurable.measure(it) }!!
             }
+
+            if (task == null) {
+                Pair(placeable, null, dividerExist)
+            } else {
+                Pair(placeable, task, dividerExist)
+            }
+
+        }
+
+
+        layout(constraints.maxWidth, height) {
+
+
+            var heightTimeBar = 0
+            val paddingHour = 10
+            val taskPadding = constraints.maxWidth / 5
+            placeableWithTasks.forEach { (placeable, task, dividerExist) ->
+                if (task == null) {
+
+                    if (dividerExist) {
+                        val offsetTime = ((time.value / 60f) * hourHeight.toPx()).roundToInt()
+                        placeable.place(paddingHour+10, offsetTime)
+                    } else {
+                        placeable.place(paddingHour, heightTimeBar)
+                        heightTimeBar += hourHeight.toPx().toInt()
+                    }
+
+
+                } else {
+                    val taskOffsetMinutes = task.timeDuration.offsetTimeToMinutes()
+                    val taskY = ((taskOffsetMinutes.div(60f)).times(hourHeight.toPx())).roundToInt()
+                    placeable.place(taskPadding, taskY)
+                }
+
+            }
+
+
         }
     }
 }
 
-private class TaskDataModifier(
-    val task: Task,
-) : ParentDataModifier {
-    override fun Density.modifyParentData(parentData: Any?) = task
+public data class Pair<out A, out B, out C>(
+    public val first: A,
+    public val second: B,
+    public val third: C
+) : Serializable {
+
+    /**
+     * Returns string representation of the [Pair] including its [first] and [second] values.
+     */
+    public override fun toString(): String = "($first, $second , $third)"
 }
 
-fun Modifier.taskData(task: Task) = this.then(TaskDataModifier(task))
+private class TaskDataModifier(
+    val task: Task?,
+    val timeBarExist: Boolean
+) : ParentDataModifier {
+    override fun Density.modifyParentData(parentData: Any?) = TaskDataModifier(task, timeBarExist)
+
+
+}
+
+fun Modifier.taskData(task: Task?, timeBarExist: Boolean) =
+    this.then(TaskDataModifier(task, timeBarExist))
 
 
 @Composable
@@ -119,7 +235,6 @@ fun BasicEvent(task: Task, modifier: Modifier = Modifier) {
 }
 
 
-
 @Composable
 fun BasicSidebarLabel(
     hour: Int, minutes: Int,
@@ -135,43 +250,8 @@ fun BasicSidebarLabel(
 }
 
 
-/*
-@Preview(showBackground = true)
-@Composable
-fun BasicSidebarLabelPreview() {
-    TodoTheme {
-        BasicSidebarLabel(10, 0, Modifier.sizeIn(64.dp, 64.dp, 64.dp, 120.dp))
-    }
-}
-*/
 
-@Composable
-fun ScheduleSidebar(
-    modifier: Modifier = Modifier,
-    hourHeight: Dp = 120.dp,
-    label: @Composable (hour: Int, minutes: Int) -> Unit = { hour, minutes ->
-        BasicSidebarLabel(hour, minutes)
-    }
-) {
-    Column(modifier = modifier) {
-        repeat(24) { i ->
-            Box(modifier = Modifier.height(hourHeight)) {
-                label(i, 0)
-            }
-        }
-    }
-}
 
-/*
-@Preview(showBackground = true)
-@Composable
-fun ScheduleSidebarPreview() {
-    TodoTheme {
-        ScheduleSidebar()
-    }
-}
-
-*/
 @Preview(showBackground = true)
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES
@@ -210,18 +290,11 @@ fun BasicEventPreview() {
 
     TodoTheme {
         val rememberScrollState = rememberScrollState()
-        Row {
-            ScheduleSidebar(
-                modifier = Modifier
-                    .weight(1F)
-                    .verticalScroll(rememberScrollState)
-            )
-            EventLayout(
-                modifier = Modifier
-                    .weight(5F)
-                    .verticalScroll(rememberScrollState), tasks = tasks
-            )
-        }
+        EventLayout(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState), tasks = tasks
+        )
+
     }
 
 

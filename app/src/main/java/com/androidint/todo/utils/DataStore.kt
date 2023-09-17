@@ -10,6 +10,14 @@ class DataStore {
     companion object {
         private const val DATA_STORE_NAME = "${BuildConfig.APPLICATION_ID}_data_store"
 
+        val colors = listOf(
+            Color.Yellow,
+            Color.Cyan,
+            Color.Magenta,
+            Color.Blue,
+            Color.Red,
+            Color.Gray
+        )
         fun categoryToColor(categoryId :Int):Color{
             return when (categoryId){
                 1 -> Color.Blue
