@@ -20,11 +20,13 @@ class DataStore {
         )
         fun categoryToColor(categoryId :Int):Color{
             return when (categoryId){
-                1 -> Color.Blue
-                2 -> Color.DarkGray
-                3 -> Color.Yellow
-                4 -> Color.Green
-                else -> {Color.Blue}
+                0 -> Color.Yellow
+                1 -> Color.Cyan
+                2 -> Color.Magenta
+                3 -> Color.Blue
+                4 -> Color.Red
+                5 -> Color.Gray
+                else -> {Color.Yellow}
             }
         }
     }

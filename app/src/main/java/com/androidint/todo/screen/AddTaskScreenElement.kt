@@ -20,12 +20,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 
 
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
@@ -42,6 +44,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -76,9 +79,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.ui.unit.dp
+import com.androidint.todo.repository.model.Category
 
 import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.DataStore
+import com.androidint.todo.utils.DataStore.Companion.categoryToColor
 import saman.zamani.persiandate.PersianDate
 import kotlin.math.abs
 
@@ -202,17 +207,18 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
         }
     }
 
-    val daysList = remember{
+    val daysList = remember {
         mutableStateListOf<Int?>()
     }
     daysList.clear()
-    var nullDay =calendar.setGrgMonth(month).dayOfWeek() - calendar.setGrgMonth(month).grgDay.mod(7)-1
-    if (nullDay<0) nullDay +=7
-    repeat(nullDay){
+    var nullDay =
+        calendar.setGrgMonth(month).dayOfWeek() - calendar.setGrgMonth(month).grgDay.mod(7) - 1
+    if (nullDay < 0) nullDay += 7
+    repeat(nullDay) {
         daysList.add(null)
     }
-    repeat(calendar.getGrgMonthLength(year,month)){
-        daysList.add(it+1)
+    repeat(calendar.getGrgMonthLength(year, month)) {
+        daysList.add(it + 1)
     }
 
     Card(modifier = modifier.padding(8.dp)) {
@@ -225,7 +231,7 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(7F)
             ) {
                 item {
-                    val week = listOf( "Mon", "Tue", "Wed", "Thu", "Fri","Sat", "Sun")
+                    val week = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
                     LazyRow(horizontalArrangement = Arrangement.Start) {
                         items(week) {
                             Box(
@@ -233,7 +239,7 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
                                 contentAlignment = Alignment.Center,
                             ) {
 
-                                    Text(text = it)
+                                Text(text = it)
 
 
                             }
@@ -245,7 +251,7 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
                 items(
 
 
-                      daysList.chunked(7)
+                    daysList.chunked(7)
                 ) { week ->
                     LazyRow(horizontalArrangement = Arrangement.Start) {
                         items(week) {
@@ -254,7 +260,7 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
                                 modifier = Modifier.sizeIn(40.dp, 40.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                it?.let{
+                                it?.let {
                                     Text(text = it.toString())
                                 }
 
@@ -622,20 +628,25 @@ fun ColorCircle(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ColorPicker(modifier: Modifier = Modifier) {
+fun ColorPicker(modifier: Modifier = Modifier, 
+                categories : List<Category>,
+                onFinished : (cat :Category)-> Unit
+) {
 
     val colorState: MutableState<Color> =
         remember { mutableStateOf(Color.Yellow) }
     Card(
         modifier = modifier
-            .requiredHeight(130.dp)
+            .requiredHeight(140.dp)
             .padding(8.dp)
     ) {
 
         Column(
             modifier = Modifier
                 .weight(2F)
-                .padding(4.dp), verticalArrangement = Arrangement.SpaceEvenly
+                .padding(4.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Row(
@@ -659,9 +670,15 @@ fun ColorPicker(modifier: Modifier = Modifier) {
                 val iconVisibility = remember { mutableStateOf(false) }
                 val maxCharacter = 25
                 val focusManager = LocalFocusManager.current
+                var nameValueOfCategory :String = ""
+                categories.forEach {
+                        if (categoryToColor( it.color ) == colorState.value)
+                            nameValueOfCategory = it.name
+                    }
 
                 OutlinedTextField(
-                    value = category.value, label = { Text(text = "Category") },
+                    value = nameValueOfCategory
+                     , label = { Text(text = "Category") },
                     onValueChange = {
                         if (it.length <= maxCharacter) category.value = it
                         iconVisibility.value = category.value.length > 4
@@ -674,13 +691,57 @@ fun ColorPicker(modifier: Modifier = Modifier) {
                     }), singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
 
+
+
+
+
             }
+
 
 
         }
 
 
     }
+
+//    Card (
+//        modifier = modifier
+////            .requiredHeight(130.dp)
+//            .padding(8.dp)
+//    ){
+//        //make data test for preview
+//            val list = mutableListOf<Category>()
+//            repeat(6){
+//                list.add(Category("cat ${it+1}"))
+//            }
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//            Column(
+//                Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp)
+//
+//
+//
+//
+//
+//
+//            ){
+//                repeat(6){
+//                    Row(
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ){
+//                        Text(text = list[it].name)
+//                        IconButton(onClick = { /*TODO*/ }) {
+//                            Icons.Default.Delete
+//                        }
+//                    }
+//                }
+//
+//
+//
+//            }
+//    }
 
 }
 
@@ -694,24 +755,35 @@ fun AddTaskPreview() {
         Column(modifier = Modifier.fillMaxHeight()) {
 
 
-            Card(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .wrapContentHeight()
-            ) {
-                TitleInput({ }) {
-
-                }
-
-                DescriptionInput({}) {
-
-                }
-
-
+//            Card(
+//                modifier = Modifier
+//                    .padding(8.dp)
+//                    .wrapContentHeight()
+//            ) {
+//                TitleInput({ }) {
+//
+//                }
+//
+//                DescriptionInput({}) {
+//
+//                }
+//
+//
+//            }
+//            CalendarTaskSet(modifier = Modifier.wrapContentHeight())
+            var list = mutableListOf<Category>()
+            repeat(5){
+                list.add(
+                    Category("cat $it",it)
+                )
             }
-            CalendarTaskSet(modifier = Modifier.wrapContentHeight())
-            ColorPicker(modifier = Modifier.wrapContentHeight())
-            ClockTaskSet(modifier = Modifier)
+
+            ColorPicker(modifier = Modifier.wrapContentHeight(),
+                        list
+            ) { cat ->
+                cat.color
+            }
+//            ClockTaskSet(modifier = Modifier)
 
 
         }

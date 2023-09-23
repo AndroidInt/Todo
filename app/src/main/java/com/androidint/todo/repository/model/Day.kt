@@ -59,7 +59,8 @@ data class TimeTask(
 
 @Entity (indices = [Index(value = ["name"], unique = true)])
 data class Category(
-    @ColumnInfo(name = "name") val name: String = "Inbox"
+    @ColumnInfo(name = "name") val name: String = "Inbox",
+    @ColumnInfo(name = "color")val color:Int = 0,
 ) {
     @PrimaryKey(autoGenerate = true)
     var categoryId: Int = 0
@@ -67,9 +68,11 @@ data class Category(
 
 data class CategoryWithTasks(
     @Embedded val category: Category,
+
     @Relation(
         parentColumn = "categoryId", //name of Id field that belongs to Category
         entityColumn = "ownerCategoryId" //name of Id field that was created for relationship
     )
     val tasks: List<Task>
+
 )

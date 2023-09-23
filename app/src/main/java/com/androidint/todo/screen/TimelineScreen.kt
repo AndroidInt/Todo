@@ -208,7 +208,13 @@ fun Modifier.taskData(task: Task?, timeBarExist: Boolean) =
 
 
 @Composable
-fun BasicEvent(task: Task, modifier: Modifier = Modifier) {
+fun BasicEvent(modifier: Modifier = Modifier,
+               task: Task,
+
+
+
+
+) {
 
     Row(
         modifier = modifier.background(
@@ -221,6 +227,7 @@ fun BasicEvent(task: Task, modifier: Modifier = Modifier) {
                 .fillMaxWidth(0.03F)
                 .fillMaxHeight(1F)
                 .background(
+                    //TODO("it must pass the task's color not ownerCategoryId")
                     DataStore.categoryToColor(task.ownerCategoryId)
                 )
         )
