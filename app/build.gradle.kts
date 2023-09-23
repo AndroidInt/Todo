@@ -8,6 +8,7 @@ plugins {
 }
 
 android {
+
     namespace = "com.androidint.todo"
     compileSdk = 33
 
@@ -101,6 +102,6 @@ dependencies {
     //compose
 //    implementation("androidx.compose.runtime:runtime-*:1.6.0-alpha03")
 
-
+    implementation("com.github.samanzamani:PersianDate:1.7.1")
 
 }

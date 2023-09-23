@@ -1,7 +1,6 @@
 package com.androidint.todo.screen
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
@@ -25,10 +24,8 @@ import androidx.compose.foundation.layout.Row
 
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
@@ -41,7 +38,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -60,22 +56,20 @@ import androidx.compose.material3.OutlinedTextField
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onGloballyPositioned
 
 import androidx.compose.ui.text.input.ImeAction
@@ -85,11 +79,7 @@ import androidx.compose.ui.unit.dp
 
 import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.DataStore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import saman.zamani.persiandate.PersianDate
 import kotlin.math.abs
 
 
@@ -184,29 +174,90 @@ fun DescriptionInput(
 }
 
 @Composable
-fun CalendarTaskSet(modifier : Modifier = Modifier) {
-
-    val dayList = (1..31).toList()
+fun CalendarTaskSet(modifier: Modifier = Modifier) {
 
 
+    val calendar by remember {
+        mutableStateOf(PersianDate())
+    }
+
+    var year by remember {
+        mutableStateOf(calendar.grgYear)
+    }
+
+    var month by remember {
+        mutableStateOf(calendar.grgMonth)
+
+    }.also {
+        if (it.value > 12) {
+            it.value = 1
+            year += 1
+        }
+
+
+        if (it.value < 1) {
+            it.value = 12
+            year -= 1
+
+        }
+    }
+
+    val daysList = remember{
+        mutableStateListOf<Int?>()
+    }
+    daysList.clear()
+    var nullDay =calendar.setGrgMonth(month).dayOfWeek() - calendar.setGrgMonth(month).grgDay.mod(7)-1
+    if (nullDay<0) nullDay +=7
+    repeat(nullDay){
+        daysList.add(null)
+    }
+    repeat(calendar.getGrgMonthLength(year,month)){
+        daysList.add(it+1)
+    }
 
     Card(modifier = modifier.padding(8.dp)) {
         Row(
-            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)
-//            horizontalArrangement = Arrangement.Center
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
 
         ) {
             LazyColumn(
                 modifier = Modifier.weight(7F)
             ) {
-                items(dayList.chunked(7)) { week ->
+                item {
+                    val week = listOf( "Mon", "Tue", "Wed", "Thu", "Fri","Sat", "Sun")
                     LazyRow(horizontalArrangement = Arrangement.Start) {
                         items(week) {
                             Box(
                                 modifier = Modifier.sizeIn(40.dp, 40.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(text = it.toString())
+
+                                    Text(text = it)
+
+
+                            }
+                        }
+                    }
+
+                }
+
+                items(
+
+
+                      daysList.chunked(7)
+                ) { week ->
+                    LazyRow(horizontalArrangement = Arrangement.Start) {
+                        items(week) {
+
+                            Box(
+                                modifier = Modifier.sizeIn(40.dp, 40.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                it?.let{
+                                    Text(text = it.toString())
+                                }
+
                             }
                         }
                     }
@@ -221,12 +272,12 @@ fun CalendarTaskSet(modifier : Modifier = Modifier) {
 
             ) {
 
-                IconButton(onClick = { /*TODO*/ }) {
+                IconButton(onClick = { month += 1 }) {
                     Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "")
                 }
-                Text(text = "2023")
-                Text(text = "Aug")
-                IconButton(onClick = { /*TODO*/ }) {
+                Text(text = year.toString())
+                Text(text = calendar.getGrgMonthName(month).take(3))
+                IconButton(onClick = { month -= 1 }) {
                     Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "")
                 }
             }
@@ -237,26 +288,25 @@ fun CalendarTaskSet(modifier : Modifier = Modifier) {
 
 }
 
+
 @ExperimentalFoundationApi
 @Composable
-fun ClockTaskSet( modifier : Modifier =Modifier) {
+fun ClockTaskSet(modifier: Modifier = Modifier) {
 
 
-    Card(modifier = modifier.padding(8.dp)
+    Card(
+        modifier = modifier.padding(8.dp)
 
     ) {
         Box(
             modifier = Modifier
-                .defaultMinSize(minHeight = 80.dp)
-                , contentAlignment = Alignment.Center
+                .defaultMinSize(minHeight = 80.dp), contentAlignment = Alignment.Center
         ) {
 
             Row(
                 modifier = Modifier
                     .wrapContentHeight()
-                    .fillMaxWidth()
-
-                ,
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
 
@@ -289,18 +339,16 @@ fun ClockComponent() {
 
     val longSwipeChangeCount = 5
     Row(
-        modifier = Modifier
-
-        ,
+        modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
 
 
-        var columnSizeHour by remember{
+        var columnSizeHour by remember {
             mutableStateOf(0F)
         }
-        var columnSizeMinute by remember{
+        var columnSizeMinute by remember {
             mutableStateOf(0F)
         }
 
@@ -316,57 +364,55 @@ fun ClockComponent() {
             var basicDelta = 0F
 
 
-            Box(modifier = Modifier
-                .defaultMinSize(40.dp, 40.dp)
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures(
-                        onVerticalDrag = { _, delta ->
+            Box(
+                modifier = Modifier
+                    .defaultMinSize(40.dp, 40.dp)
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { _, delta ->
 
-                            if (abs(delta) > columnSizeHour / 2) {
-                                if (delta < 0) {
-                                    direction = true
-                                    repeat(longSwipeChangeCount) {
-                                        if (hour > 0) hour--
+                                if (abs(delta) > columnSizeHour / 2) {
+                                    if (delta < 0) {
+                                        direction = true
+                                        repeat(longSwipeChangeCount) {
+                                            if (hour > 0) hour--
+                                        }
+
+
+                                    } else if (delta > 0) {
+                                        direction = false
+                                        repeat(longSwipeChangeCount) {
+                                            if (hour < 23) hour++
+                                        }
+
                                     }
+                                }
+                                basicDelta = delta
 
 
-                                } else if (delta > 0) {
-                                    direction = false
-                                    repeat(longSwipeChangeCount) {
+                            },
+                            onDragEnd = {
+
+                                if (abs(basicDelta) < columnSizeHour / 2) {
+                                    if (basicDelta < 0) {
+                                        direction = true
+                                        if (hour > 0) hour--
+                                    } else if (basicDelta > 0) {
+                                        direction = false
                                         if (hour < 23) hour++
                                     }
-
                                 }
+
+
                             }
-                            basicDelta = delta
-
-
-                        },
-                        onDragEnd = {
-
-                            if (abs(basicDelta) < columnSizeHour / 2) {
-                                if (basicDelta < 0) {
-                                    direction = true
-                                    if (hour > 0) hour--
-                                } else if (basicDelta > 0) {
-                                    direction = false
-                                    if (hour < 23) hour++
-                                }
-                            }
-
-
-                        }
-                    )
-                }
-
-
-                , contentAlignment = Alignment.Center
+                        )
+                    }, contentAlignment = Alignment.Center
             ) {
 
-                        AnimatedCounter(
-                            modifier = Modifier,
-                            count = hour, direction = direction )
-
+                AnimatedCounter(
+                    modifier = Modifier,
+                    count = hour, direction = direction
+                )
 
 
             }
@@ -386,57 +432,55 @@ fun ClockComponent() {
             var basicDelta = 0F
 
 
-            Box(modifier = Modifier
-                .defaultMinSize(40.dp, 40.dp)
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures(
-                        onVerticalDrag = { _, delta ->
+            Box(
+                modifier = Modifier
+                    .defaultMinSize(40.dp, 40.dp)
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { _, delta ->
 
-                            if (abs(delta) > columnSizeHour / 2) {
-                                if (delta < 0) {
-                                    direction = true
-                                    repeat(longSwipeChangeCount) {
+                                if (abs(delta) > columnSizeHour / 2) {
+                                    if (delta < 0) {
+                                        direction = true
+                                        repeat(longSwipeChangeCount) {
+                                            if (minute > 0) minute--
+                                        }
+
+
+                                    } else if (delta > 0) {
+                                        direction = false
+                                        repeat(longSwipeChangeCount) {
+                                            if (minute < 59) minute++
+                                        }
+
+                                    }
+                                }
+                                basicDelta = delta
+
+
+                            },
+                            onDragEnd = {
+
+                                if (abs(basicDelta) < columnSizeHour / 2) {
+                                    if (basicDelta < 0) {
+                                        direction = true
                                         if (minute > 0) minute--
+                                    } else if (basicDelta > 0) {
+                                        direction = false
+                                        if (minute < 23) minute++
                                     }
-
-
-                                } else if (delta > 0) {
-                                    direction = false
-                                    repeat(longSwipeChangeCount) {
-                                        if (minute < 59) minute++
-                                    }
-
                                 }
+
+
                             }
-                            basicDelta = delta
-
-
-                        },
-                        onDragEnd = {
-
-                            if (abs(basicDelta) < columnSizeHour / 2) {
-                                if (basicDelta < 0) {
-                                    direction = true
-                                    if (minute > 0) minute--
-                                } else if (basicDelta > 0) {
-                                    direction = false
-                                    if (minute < 23) minute++
-                                }
-                            }
-
-
-                        }
-                    )
-                }
-
-
-                , contentAlignment = Alignment.Center
+                        )
+                    }, contentAlignment = Alignment.Center
             ) {
 
                 AnimatedCounter(
                     modifier = Modifier,
-                    count = minute, direction = direction )
-
+                    count = minute, direction = direction
+                )
 
 
             }
@@ -445,10 +489,14 @@ fun ClockComponent() {
         }
 
 
-
     }
 
 }
+
+
+/*
+
+This composable might be review and alternate with AnimatedCounter in future.
 
 @Composable
 fun AnimateCounter(
@@ -462,9 +510,7 @@ fun AnimateCounter(
     }
     val listState = rememberLazyListState()
     LazyColumn(
-        modifier = modifier
-
-        ,
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally, state = listState,
         verticalArrangement = Arrangement.Center
 
@@ -481,7 +527,6 @@ fun AnimateCounter(
             LaunchedEffect(key1 = !listState.isScrollInProgress) {
 
 
-
                 listState.animateScrollToItem(listState.firstVisibleItemIndex)
 
 
@@ -490,23 +535,17 @@ fun AnimateCounter(
 
 
             Column(
-                modifier = modifier
-                ,
+                modifier = modifier,
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
 
-
-                if (it == remember { derivedStateOf { listState.firstVisibleItemIndex } }.value){
-                    Text(text = it.toString() )
-                }else{
-                    Text(text = it.toString(), modifier.height(0.dp) )
+                if (it == remember { derivedStateOf { listState.firstVisibleItemIndex } }.value) {
+                    Text(text = it.toString())
+                } else {
+                    Text(text = it.toString(), modifier.height(0.dp))
                 }
-
-
-
-
 
 
             }
@@ -516,8 +555,7 @@ fun AnimateCounter(
 
     }
 }
-
-
+*/
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -527,35 +565,27 @@ fun AnimatedCounter(
     modifier: Modifier = Modifier,
 ) {
 
-    var oldCount by remember {
-        mutableStateOf(count)
-    }
-    SideEffect {
-        oldCount = count
-    }
+
     Row(modifier = modifier) {
         val countString = count.toString()
 
-            AnimatedContent(
-                targetState = countString,
-                transitionSpec = {
-                    if (direction) {
+        AnimatedContent(
+            targetState = countString,
+            transitionSpec = {
+                if (direction) {
+                    slideInVertically { it } with slideOutVertically { -it }
+                } else {
+                    slideInVertically { -it } with slideOutVertically { it }
+                }
 
-
-                        slideInVertically { it } with slideOutVertically { -it }
-
-                    } else {
-                        slideInVertically { -it } with slideOutVertically { it }
-                    }
-
-                }, label = ""
-            ) { char ->
-                Text(
-                    text = char.toString(),
-                    softWrap = false,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+            }, label = ""
+        ) { char ->
+            Text(
+                text = if (char.length == 1) "0$char" else char,
+                softWrap = false,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
     }
 }
@@ -592,7 +622,7 @@ fun ColorCircle(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ColorPicker(modifier : Modifier = Modifier) {
+fun ColorPicker(modifier: Modifier = Modifier) {
 
     val colorState: MutableState<Color> =
         remember { mutableStateOf(Color.Yellow) }
@@ -656,7 +686,7 @@ fun ColorPicker(modifier : Modifier = Modifier) {
 
 
 @OptIn(ExperimentalFoundationApi::class)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 fun AddTaskPreview() {
 
@@ -664,9 +694,10 @@ fun AddTaskPreview() {
         Column(modifier = Modifier.fillMaxHeight()) {
 
 
-            Card(modifier = Modifier
-                .padding(8.dp)
-                .wrapContentHeight()
+            Card(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .wrapContentHeight()
             ) {
                 TitleInput({ }) {
 
