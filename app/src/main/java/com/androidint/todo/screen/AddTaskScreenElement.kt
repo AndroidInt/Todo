@@ -771,7 +771,8 @@ fun ColorPicker(
     categories: List<Category>,
     onBack: () -> Unit,
     confirmToNext: MutableState<Boolean>,
-    onSetCategory: (category: Category) -> Unit
+    onSetCategory: (category: Category) -> Unit,
+    onTemporaryCategory: (category: Category) -> Unit
 
 ) {
 
@@ -789,47 +790,64 @@ fun ColorPicker(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
-                    for (color in DataStore.colors)
-                        ColorCircle(
-                            modifier = Modifier.weight(1F), color = color, colorState = colorState
-                        )
-
-
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(8.dp), verticalAlignment = Alignment.Top
-                ) {
-
-                    val maxCharacter = 25
-                    val focusManager = LocalFocusManager.current
-
-                    categories.forEach {
-                         if (categoryToColor(it.color) == colorState.value)
-                             categoryName = it.name
-
-                    }
-
-                    OutlinedTextField(
-                        value = categoryName,
-                        label = { Text(text = "Category") },
-                        onValueChange = {
-                            if (it.length <= maxCharacter) categoryName = it
-                        }, keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done
-                        ), keyboardActions = KeyboardActions(onDone = {
-                            focusManager.clearFocus()
-
-                        }), singleLine = true, modifier = Modifier.fillMaxWidth()
+                for (color in DataStore.colors)
+                    ColorCircle(
+                        modifier = Modifier.weight(1F), color = color, colorState = colorState
                     )
 
 
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp), verticalAlignment = Alignment.Top
+            ) {
+
+                val maxCharacter = 25
+                val focusManager = LocalFocusManager.current
+
+                categories.forEach {
+                    if (categoryToColor(it.color) == colorState.value)
+                        categoryName = it.name
+
                 }
+
+
+                if (!categories.any { it.color == colorToCategoryGroup(colorState.value) })
+                    categoryName = ""
+
+                OutlinedTextField(
+                    value = categoryName,
+                    label = { Text(text = "Category") },
+                    onValueChange = {
+                        if (it.length <= maxCharacter) {
+                            categoryName = it
+                            onTemporaryCategory(
+                                Category(
+                                    categoryName,
+                                    colorToCategoryGroup(
+                                        colorState.value
+                                    )
+                                )
+                            )
+                        }
+                    }, keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done
+                    ), keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+
+                    }), singleLine = true, modifier = Modifier.fillMaxWidth()
+                )
+
+
+            }
 
 
             Row {
@@ -936,19 +954,20 @@ fun AddTaskPreview() {
 //
 //            }
             val list = mutableListOf<Category>()
-            repeat(5) {
+            repeat(1) {
                 list.add(
-                    Category("cat $it", it)
+                    Category("Inbox", it)
                 )
             }
 
             ColorPicker(
                 modifier = Modifier.wrapContentHeight(),
                 categories = list, onBack = {},
-                 confirmToNext = remember{ mutableStateOf(false)}
-                ,onSetCategory = {
+                confirmToNext = remember { mutableStateOf(false) }, onSetCategory = {
 
-                })
+                }) {
+
+                   }
 //            ClockTaskSet(modifier = Modifier,
 //                onBack = {},
 //                onSetStartDuration = { _,_ ->},
