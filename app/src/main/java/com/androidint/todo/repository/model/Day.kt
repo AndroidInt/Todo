@@ -29,6 +29,26 @@ data class Task(
     var taskId: Int = 0
 }
 
+enum class DayOfWeek() {
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday;
+
+
+    fun next(): DayOfWeek {
+        val values = DayOfWeek.values()
+        val size = values.size
+        var nextOrdinal = (ordinal + 1)
+        if(nextOrdinal > size-1)
+            nextOrdinal = 0
+        return values[nextOrdinal]
+    }
+}
+
 class Day(
     var dayOfWeek: Int,
     val dayOfMonth: Int,
@@ -42,25 +62,26 @@ data class TimeTask(
     val startMinute: Int = 0,
     val endHour: Int = 0,
     val endMinute: Int = 0
-): Comparable<TimeTask> {
+) : Comparable<TimeTask> {
     override fun compareTo(other: TimeTask): Int {
         return "${other.startHour.toString()}${other.startMinute.toString()}".toInt()
     }
 
-    fun eventDuration():Int{
-        val hour =   endHour - startHour
+    fun eventDuration(): Int {
+        val hour = endHour - startHour
         val min = endMinute - startMinute
-        return ( hour * 60 ) + min
+        return (hour * 60) + min
     }
-    fun offsetTimeToMinutes():Int{
+
+    fun offsetTimeToMinutes(): Int {
         return startHour * 60 + startMinute
     }
 }
 
-@Entity (indices = [Index(value = ["name"], unique = true)])
+@Entity(indices = [Index(value = ["name"], unique = true)])
 data class Category(
     @ColumnInfo(name = "name") val name: String = "Inbox",
-    @ColumnInfo(name = "color")val color:Int = 0,
+    @ColumnInfo(name = "color") val color: Int = 0,
 ) {
     @PrimaryKey(autoGenerate = true)
     var categoryId: Int = 0

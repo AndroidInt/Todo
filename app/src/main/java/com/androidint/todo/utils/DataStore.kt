@@ -29,5 +29,17 @@ class DataStore {
                 else -> {Color.Yellow}
             }
         }
+        fun colorToCategoryGroup(color :Color):Int{
+            return when (color){
+                  Color.Yellow -> 0
+                  Color.Cyan -> 1
+                  Color.Magenta -> 2
+                  Color.Blue -> 3
+                  Color.Red -> 4
+                  Color.Gray -> 5
+                else -> {0}
+            }
+        }
+
     }
 }

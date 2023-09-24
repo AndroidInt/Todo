@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.androidint.todo.screen.BasicEventPreview
-import com.androidint.todo.screen.ClockTaskSet
+
 import com.androidint.todo.ui.theme.TodoTheme
 
 class MainActivity : ComponentActivity() {

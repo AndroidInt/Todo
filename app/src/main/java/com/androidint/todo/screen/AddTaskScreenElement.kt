@@ -1,5 +1,6 @@
 package com.androidint.todo.screen
 
+
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -7,83 +8,65 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.with
 import androidx.compose.foundation.Canvas
-
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-
-
 import androidx.compose.foundation.layout.Column
-
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-
-
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
-
 import androidx.compose.foundation.layout.sizeIn
-
 import androidx.compose.foundation.layout.wrapContentHeight
-
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.material3.OutlinedTextField
-
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-
-
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
-
 import androidx.compose.ui.unit.dp
 import com.androidint.todo.repository.model.Category
+import com.androidint.todo.repository.model.DayOfWeek
 
 import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.DataStore
 import com.androidint.todo.utils.DataStore.Companion.categoryToColor
+import com.androidint.todo.utils.DataStore.Companion.colorToCategoryGroup
 import saman.zamani.persiandate.PersianDate
 import kotlin.math.abs
 
@@ -91,35 +74,48 @@ import kotlin.math.abs
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TitleInput(
-    onTitleChange: (String) -> Unit, onNextLevelClick: () -> Unit
+    onSetTitle: (String) -> Unit,
 ) {
 
 
-    val title = remember { mutableStateOf("") }
-    val iconVisibility = remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf("") }
+    var confirmToNext by remember { mutableStateOf(false) }
     val maxCharacter = 25
     val focusManager = LocalFocusManager.current
-    Row(modifier = Modifier.padding(8.dp)) {
-        OutlinedTextField(trailingIcon = {
-            if (iconVisibility.value) {
-                Icon(imageVector = Icons.Default.Done, contentDescription = "")
+
+    Card(modifier = Modifier.padding(8.dp)) {
+
+        Column() {
+            Row(modifier = Modifier.padding(8.dp)) {
+                OutlinedTextField(
+
+                    value = title, label = { Text(text = "Title") }, onValueChange = {
+                        if (it.length <= maxCharacter) title = it
+
+                        confirmToNext = title.length > 4
+
+                    }, keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done
+                    ), keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                    }), singleLine = true, modifier = Modifier.fillMaxWidth()
+                )
+
+
             }
 
-        },
+            Row(modifier = Modifier.padding(8.dp)) {
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onSetTitle(title) },
+                    enabled = confirmToNext
+                ) {
+                    Text(text = "Next")
+                }
 
-            value = title.value, label = { Text(text = "Title") }, onValueChange = {
-                if (it.length <= maxCharacter) title.value = it
-                onTitleChange(it)
-                iconVisibility.value = title.value.length > 4
 
-            }, keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done
-            ), keyboardActions = KeyboardActions(onDone = {
-                focusManager.clearFocus()
-                onNextLevelClick()
-            }), singleLine = true, modifier = Modifier.fillMaxWidth()
-        )
-
+            }
+        }
 
     }
 
@@ -129,63 +125,97 @@ fun TitleInput(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DescriptionInput(
-    onDescriptionChange: (String) -> Unit, onNextLevelClick: () -> Unit
-) {
+    onSetDescription: (String) -> Unit,
+    onBack: () -> Unit,
+
+    ) {
 
 
-    val description = remember { mutableStateOf("") }
-    val iconVisibility = remember { mutableStateOf(false) }
+    var description by remember { mutableStateOf("") }
+    var confirmToNext by remember { mutableStateOf(false) }
     val maxCharacter = 150
     val focusManager = LocalFocusManager.current
 
+    Card(modifier = Modifier.padding(8.dp)) {
 
-    Row(modifier = Modifier.padding(8.dp)) {
+        Column {
 
-        OutlinedTextField(
-            trailingIcon = {
-                if (iconVisibility.value) {
-                    Icon(imageVector = Icons.Default.Done, contentDescription = "")
+            Row(modifier = Modifier.padding(8.dp)) {
+
+                OutlinedTextField(
+
+                    value = description,
+                    label = { Text(text = "description") },
+                    onValueChange = {
+                        if (it.length <= maxCharacter) description = it
+                        confirmToNext = description.length > 4
+
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+
+                    }),
+                    singleLine = true,
+                    maxLines = 3,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                )
+
+
+            }
+            Row(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+            ) {
+                Button(modifier = Modifier.weight(0.9F),
+                    onClick = { onBack() }) {
+                    Text(text = "Back")
+
+                }
+                Spacer(modifier = Modifier.weight(0.05F))
+                Button(
+                    modifier = Modifier.weight(0.9F),
+                    onClick = { onSetDescription(description) },
+                    enabled = confirmToNext
+                ) {
+                    Text(text = "Next")
+
                 }
 
-
-            },
-
-            value = description.value,
-            label = { Text(text = "description") },
-            onValueChange = {
-                if (it.length <= maxCharacter) description.value = it
-                onDescriptionChange(it)
-                iconVisibility.value = description.value.length > 4
-
-            },
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(onDone = {
-                focusManager.clearFocus()
-                onNextLevelClick()
-            }),
-            singleLine = true,
-            maxLines = 3,
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-        )
-
-
+            }
+        }
     }
 
 
 }
 
+
 @Composable
-fun CalendarTaskSet(modifier: Modifier = Modifier) {
+fun CalendarTaskSet(
+    modifier: Modifier = Modifier,
+    startDayOfWeek: DayOfWeek = DayOfWeek.Monday,
+    onSelectedDay: (year: Int, month: Int, day: Int) -> Unit,
+    onBack: () -> Unit,
+) {
 
 
-    val calendar by remember {
-        mutableStateOf(PersianDate())
+    val calendar = PersianDate()
+    var selectedDay by remember {
+        mutableStateOf(0)
     }
+    val confirmToNext by remember {
+        derivedStateOf {
+            mutableStateOf(
+                selectedDay != 0
+            )
+        }
 
+    }
     var year by remember {
         mutableStateOf(calendar.grgYear)
     }
@@ -206,15 +236,20 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
 
         }
     }
-
-    val daysList = remember {
-        mutableStateListOf<Int?>()
+    val firstDayOfMonth by remember {
+        derivedStateOf {
+            mutableStateOf(
+                calendar.setGrgMonth(month)
+                    .dayOfWeek() - calendar.setGrgMonth(month).grgDay.mod(7) - 1
+            )
+        }
     }
+
+    val daysList = mutableListOf<Int?>()
+
     daysList.clear()
-    var nullDay =
-        calendar.setGrgMonth(month).dayOfWeek() - calendar.setGrgMonth(month).grgDay.mod(7) - 1
-    if (nullDay < 0) nullDay += 7
-    repeat(nullDay) {
+    if (firstDayOfMonth.value < 0) firstDayOfMonth.value += 7
+    repeat(firstDayOfMonth.value) {
         daysList.add(null)
     }
     repeat(calendar.getGrgMonthLength(year, month)) {
@@ -231,9 +266,15 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(7F)
             ) {
                 item {
-                    val week = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                    //make static name header of week based on starting day of week
+                    val daysWeek = mutableListOf(startDayOfWeek.toString().take(3))
+                    var day = startDayOfWeek
+                    repeat(7) {
+                        day = day.next()
+                        daysWeek.add(day.toString().take(3))
+                    }
                     LazyRow(horizontalArrangement = Arrangement.Start) {
-                        items(week) {
+                        items(daysWeek) {
                             Box(
                                 modifier = Modifier.sizeIn(40.dp, 40.dp),
                                 contentAlignment = Alignment.Center,
@@ -257,9 +298,26 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
                         items(week) {
 
                             Box(
-                                modifier = Modifier.sizeIn(40.dp, 40.dp),
+                                modifier = Modifier
+                                    .sizeIn(40.dp, 40.dp)
+                                    .clickable {
+                                        it?.let {
+                                            selectedDay = it
+                                        }
+
+                                    }
+                                    .background(
+                                        color = Color.Unspecified,
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        2.dp,
+                                        if (it != null && selectedDay == it) MaterialTheme.colorScheme.onBackground else Color.Unspecified,
+                                        CircleShape
+                                    ),
                                 contentAlignment = Alignment.Center,
-                            ) {
+
+                                ) {
                                 it?.let {
                                     Text(text = it.toString())
                                 }
@@ -278,15 +336,42 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
 
             ) {
 
-                IconButton(onClick = { month += 1 }) {
+                IconButton(onClick = {
+                    month += 1
+                    selectedDay = 0
+                }) {
                     Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "")
                 }
                 Text(text = year.toString())
                 Text(text = calendar.getGrgMonthName(month).take(3))
-                IconButton(onClick = { month -= 1 }) {
+                IconButton(onClick = {
+                    month -= 1
+                    selectedDay = 0
+                }) {
                     Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "")
                 }
             }
+        }
+
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+        ) {
+            Button(modifier = Modifier.weight(0.9F),
+                onClick = { onBack() }) {
+                Text(text = "Back")
+
+            }
+            Spacer(modifier = Modifier.weight(0.05F))
+            Button(
+                modifier = Modifier.weight(0.9F),
+                onClick = { onSelectedDay(year, month, selectedDay) },
+                enabled = confirmToNext.value
+            ) {
+                Text(text = "Next")
+            }
+
         }
 
     }
@@ -297,40 +382,83 @@ fun CalendarTaskSet(modifier: Modifier = Modifier) {
 
 @ExperimentalFoundationApi
 @Composable
-fun ClockTaskSet(modifier: Modifier = Modifier) {
+fun ClockTaskSet(
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit,
+    onSetStartDuration: (
+        startHour: Int,
+        startMinute: Int
+    ) -> Unit,
+    onSetEndDuration: (
+        endHour: Int,
+        endMinute: Int
+    ) -> Unit,
+    confirmToSave: MutableState<Boolean>,
+    saveData: () -> Unit
+
+) {
 
 
     Card(
         modifier = modifier.padding(8.dp)
 
     ) {
-        Box(
-            modifier = Modifier
-                .defaultMinSize(minHeight = 80.dp), contentAlignment = Alignment.Center
-        ) {
 
-            Row(
+        Row {
+            Box(
                 modifier = Modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-
+                    .defaultMinSize(minHeight = 80.dp), contentAlignment = Alignment.Center
             ) {
-                Text(text = "From")
-                ClockComponent()
-                Text(text = "to")
-                ClockComponent()
+
+                Row(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+
+                ) {
+                    Text(text = "From")
+                    ClockComponent() { hour, minute ->
+                        onSetStartDuration(hour, minute)
+                    }
+                    Text(text = "to")
+                    ClockComponent() { hour, minute ->
+                        onSetEndDuration(hour, minute)
+                    }
+                }
+
+            }
+        }
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+        ) {
+            Button(modifier = Modifier.weight(0.9F),
+                onClick = { onBack() }) {
+                Text(text = "Back")
+
+            }
+            Spacer(modifier = Modifier.weight(0.05F))
+            Button(
+                modifier = Modifier.weight(0.9F),
+                onClick = { saveData() },
+                enabled = confirmToSave.value
+            ) {
+                Text(text = "Save")
             }
 
         }
+
+
     }
 
 }
 
 
 @Composable
-fun ClockComponent() {
+fun ClockComponent(onSetClock: (hour: Int, minute: Int) -> Unit) {
 
 
     var hour by remember {
@@ -417,7 +545,10 @@ fun ClockComponent() {
 
                 AnimatedCounter(
                     modifier = Modifier,
-                    count = hour, direction = direction
+                    count = hour, direction = direction,
+                    onSetCounter = {
+                        onSetClock(hour, minute)
+                    }
                 )
 
 
@@ -485,7 +616,10 @@ fun ClockComponent() {
 
                 AnimatedCounter(
                     modifier = Modifier,
-                    count = minute, direction = direction
+                    count = minute, direction = direction,
+                    onSetCounter = {
+                        onSetClock(hour, minute)
+                    }
                 )
 
 
@@ -567,6 +701,7 @@ fun AnimateCounter(
 @Composable
 fun AnimatedCounter(
     count: Int,
+    onSetCounter: () -> Unit,
     direction: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -578,14 +713,17 @@ fun AnimatedCounter(
         AnimatedContent(
             targetState = countString,
             transitionSpec = {
+                onSetCounter()
                 if (direction) {
                     slideInVertically { it } with slideOutVertically { -it }
                 } else {
                     slideInVertically { -it } with slideOutVertically { it }
                 }
 
-            }, label = ""
-        ) { char ->
+            },
+            label = "",
+
+            ) { char ->
             Text(
                 text = if (char.length == 1) "0$char" else char,
                 softWrap = false,
@@ -628,75 +766,101 @@ fun ColorCircle(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ColorPicker(modifier: Modifier = Modifier, 
-                categories : List<Category>,
-                onFinished : (cat :Category)-> Unit
+fun ColorPicker(
+    modifier: Modifier = Modifier,
+    categories: List<Category>,
+    onBack: () -> Unit,
+    confirmToNext: MutableState<Boolean>,
+    onSetCategory: (category: Category) -> Unit
+
 ) {
 
-    val colorState: MutableState<Color> =
-        remember { mutableStateOf(Color.Yellow) }
+    val colorState: MutableState<Color> = remember { mutableStateOf(Color.Yellow) }
+    var categoryName by remember { mutableStateOf("") }
     Card(
         modifier = modifier
-            .requiredHeight(140.dp)
             .padding(8.dp)
     ) {
 
         Column(
             modifier = Modifier
-                .weight(2F)
                 .padding(4.dp),
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Row(
-                modifier = Modifier.weight(1F),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-                for (color in DataStore.colors)
-                    ColorCircle(
-                        modifier = Modifier.weight(1F), color = color, colorState = colorState
+                    for (color in DataStore.colors)
+                        ColorCircle(
+                            modifier = Modifier.weight(1F), color = color, colorState = colorState
+                        )
+
+
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(8.dp), verticalAlignment = Alignment.Top
+                ) {
+
+                    val maxCharacter = 25
+                    val focusManager = LocalFocusManager.current
+
+                    categories.forEach {
+                         if (categoryToColor(it.color) == colorState.value)
+                             categoryName = it.name
+
+                    }
+
+                    OutlinedTextField(
+                        value = categoryName,
+                        label = { Text(text = "Category") },
+                        onValueChange = {
+                            if (it.length <= maxCharacter) categoryName = it
+                        }, keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done
+                        ), keyboardActions = KeyboardActions(onDone = {
+                            focusManager.clearFocus()
+
+                        }), singleLine = true, modifier = Modifier.fillMaxWidth()
                     )
 
 
-            }
-            Row(
-                modifier = Modifier
-                    .weight(2F)
-                    .padding(8.dp), verticalAlignment = Alignment.Top
-            ) {
-                val category = remember { mutableStateOf("") }
-                val iconVisibility = remember { mutableStateOf(false) }
-                val maxCharacter = 25
-                val focusManager = LocalFocusManager.current
-                var nameValueOfCategory :String = ""
-                categories.forEach {
-                        if (categoryToColor( it.color ) == colorState.value)
-                            nameValueOfCategory = it.name
+                }
+
+
+            Row {
+                Row(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
+                ) {
+                    Button(modifier = Modifier.weight(0.9F),
+                        onClick = { onBack() }) {
+                        Text(text = "Back")
+
+                    }
+                    Spacer(modifier = Modifier.weight(0.05F))
+                    Button(
+                        modifier = Modifier.weight(0.9F),
+                        onClick = {
+                            onSetCategory(
+                                Category(
+                                    name = categoryName,
+                                    color = colorToCategoryGroup(colorState.value)
+                                )
+                            )
+                        },
+                        enabled = confirmToNext.value
+                    ) {
+                        Text(text = "Next")
                     }
 
-                OutlinedTextField(
-                    value = nameValueOfCategory
-                     , label = { Text(text = "Category") },
-                    onValueChange = {
-                        if (it.length <= maxCharacter) category.value = it
-                        iconVisibility.value = category.value.length > 4
-
-                    }, keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done
-                    ), keyboardActions = KeyboardActions(onDone = {
-                        focusManager.clearFocus()
-
-                    }), singleLine = true, modifier = Modifier.fillMaxWidth()
-                )
-
-
-
-
-
+                }
             }
-
 
 
         }
@@ -755,35 +919,47 @@ fun AddTaskPreview() {
         Column(modifier = Modifier.fillMaxHeight()) {
 
 
-//            Card(
-//                modifier = Modifier
-//                    .padding(8.dp)
-//                    .wrapContentHeight()
-//            ) {
-//                TitleInput({ }) {
-//
-//                }
-//
-//                DescriptionInput({}) {
-//
-//                }
-//
+//            TitleInput {
 //
 //            }
-//            CalendarTaskSet(modifier = Modifier.wrapContentHeight())
-            var list = mutableListOf<Category>()
-            repeat(5){
+//
+//            DescriptionInput({}) {
+//
+//            }
+
+
+//            CalendarTaskSet(modifier = Modifier.wrapContentHeight(), onSelectedDay = { _, _, _ ->
+//
+//            }
+//
+//            ) {
+//
+//            }
+            val list = mutableListOf<Category>()
+            repeat(5) {
                 list.add(
-                    Category("cat $it",it)
+                    Category("cat $it", it)
                 )
             }
 
-            ColorPicker(modifier = Modifier.wrapContentHeight(),
-                        list
-            ) { cat ->
-                cat.color
-            }
-//            ClockTaskSet(modifier = Modifier)
+            ColorPicker(
+                modifier = Modifier.wrapContentHeight(),
+                categories = list, onBack = {},
+                 confirmToNext = remember{ mutableStateOf(false)}
+                ,onSetCategory = {
+
+                })
+//            ClockTaskSet(modifier = Modifier,
+//                onBack = {},
+//                onSetStartDuration = { _,_ ->},
+//                onSetEndDuration = {_,_ ->},
+//                confirmToSave = remember {mutableStateOf(false)},
+//                saveData = {}
+//
+//
+//
+//
+//                )
 
 
         }
