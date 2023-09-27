@@ -1,6 +1,8 @@
 package com.androidint.todo
 
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -13,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.androidint.todo.screen.AddTaskScreen
 import com.androidint.todo.screen.BasicEventPreview
 
 import com.androidint.todo.ui.theme.TodoTheme
@@ -20,6 +23,7 @@ import com.androidint.todo.ui.theme.TodoTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             TodoTheme {
                 // A surface container using the 'background' color from the theme
@@ -28,7 +32,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column(verticalArrangement = Arrangement.Center) {
-                        BasicEventPreview()
+                        AddTaskScreen()
                     }
 
                 }

@@ -58,10 +58,10 @@ class Day(
 
 
 data class TimeTask(
-    val startHour: Int = 0,
-    val startMinute: Int = 0,
-    val endHour: Int = 0,
-    val endMinute: Int = 0
+    var startHour: Int = 0,
+    var startMinute: Int = 0,
+    var endHour: Int = 0,
+    var endMinute: Int = 0
 ) : Comparable<TimeTask> {
     override fun compareTo(other: TimeTask): Int {
         return "${other.startHour.toString()}${other.startMinute.toString()}".toInt()
@@ -78,7 +78,7 @@ data class TimeTask(
     }
 }
 
-@Entity(indices = [Index(value = ["name"], unique = true)])
+@Entity(indices = [Index(value = ["name","color"], unique = true)])
 data class Category(
     @ColumnInfo(name = "name") val name: String = "Inbox",
     @ColumnInfo(name = "color") val color: Int = 0,

@@ -41,8 +41,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import com.androidint.todo.repository.model.Day
 import com.androidint.todo.repository.model.Task
@@ -73,6 +75,7 @@ fun EventLayout(
 
     }
 ) {
+    val width = LocalConfiguration.current.screenWidthDp
     val hourHeight = 120.dp
     val time = remember {
         mutableStateOf(
@@ -81,7 +84,7 @@ fun EventLayout(
         )
     }
     Layout(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         content = {
 
 
@@ -151,7 +154,12 @@ fun EventLayout(
         }
 
 
-        layout(constraints.maxWidth, height) {
+        layout( constraints.maxWidth
+//            constraints.maxWidth
+//            placeableWithTasks.maxOfOrNull {
+//            it.first.width
+//        } ?: 0
+            , height) {
 
 
             var heightTimeBar = 0
@@ -217,7 +225,8 @@ fun BasicEvent(modifier: Modifier = Modifier,
 ) {
 
     Row(
-        modifier = modifier.background(
+        modifier = modifier.fillMaxWidth()
+            .background(
             MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp)
         )
     ) {
@@ -232,7 +241,7 @@ fun BasicEvent(modifier: Modifier = Modifier,
                 )
         )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.fillMaxWidth(0.03F))
 
         Column(Modifier.fillMaxWidth(0.97F)) {
             Spacer(modifier = Modifier.height(16.dp))

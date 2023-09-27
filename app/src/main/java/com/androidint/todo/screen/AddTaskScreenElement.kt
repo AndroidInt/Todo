@@ -2,11 +2,14 @@ package com.androidint.todo.screen
 
 
 import android.content.res.Configuration
+import android.view.Window
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.with
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -16,16 +19,20 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -37,14 +44,18 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -53,13 +64,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.DayOfWeek
 
@@ -74,31 +91,50 @@ import kotlin.math.abs
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TitleInput(
+    initTitle:String,
     onSetTitle: (String) -> Unit,
 ) {
 
 
-    var title by remember { mutableStateOf("") }
-    var confirmToNext by remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf(initTitle) }
+    var confirmToNext by remember {
+        if (initTitle.length > 4){
+            mutableStateOf(true)
+        }else{
+            mutableStateOf(false)
+        }
+    }
     val maxCharacter = 25
     val focusManager = LocalFocusManager.current
+    val focusRequester = FocusRequester()
+    LaunchedEffect(Unit){
+        focusRequester.requestFocus()
+    }
 
-    Card(modifier = Modifier.padding(8.dp)) {
+    Card(modifier = Modifier
+        .padding(8.dp)
+        .imePadding()) {
 
         Column() {
+
             Row(modifier = Modifier.padding(8.dp)) {
                 OutlinedTextField(
 
-                    value = title, label = { Text(text = "Title") }, onValueChange = {
+                    value = title,
+                    placeholder = { Text(text = "write somethings ...") },
+                    label = { Text(text = "Title") }, onValueChange = {
                         if (it.length <= maxCharacter) title = it
-
-                        confirmToNext = title.length > 4
+                        confirmToNext = title.length > 2
 
                     }, keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ), keyboardActions = KeyboardActions(onDone = {
+//                        if (confirmToNext)
+//                            onSetTitle(title)
                         focusManager.clearFocus()
-                    }), singleLine = true, modifier = Modifier.fillMaxWidth()
+                    }), singleLine = true, modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
                 )
 
 
@@ -125,18 +161,24 @@ fun TitleInput(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DescriptionInput(
+    initDescription:String,
     onSetDescription: (String) -> Unit,
     onBack: () -> Unit,
 
     ) {
 
 
-    var description by remember { mutableStateOf("") }
-    var confirmToNext by remember { mutableStateOf(false) }
-    val maxCharacter = 150
+    var description by remember { mutableStateOf(initDescription) }
+    var confirmToNext by remember { mutableStateOf(true) }
+    val maxCharacter = 40
     val focusManager = LocalFocusManager.current
-
-    Card(modifier = Modifier.padding(8.dp)) {
+    val focusRequester = FocusRequester()
+    LaunchedEffect(Unit){
+        focusRequester.requestFocus()
+    }
+    Card(modifier = Modifier
+        .padding(8.dp)
+        .focusRequester(focusRequester)) {
 
         Column {
 
@@ -145,16 +187,18 @@ fun DescriptionInput(
                 OutlinedTextField(
 
                     value = description,
+                    placeholder = { Text(text = "optional") },
                     label = { Text(text = "description") },
                     onValueChange = {
                         if (it.length <= maxCharacter) description = it
-                        confirmToNext = description.length > 4
 
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(onDone = {
+//                        if (confirmToNext)
+//                            onSetDescription(description)
                         focusManager.clearFocus()
 
                     }),
@@ -162,7 +206,7 @@ fun DescriptionInput(
                     maxLines = 3,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .wrapContentHeight(),
+
                 )
 
 
@@ -198,6 +242,9 @@ fun DescriptionInput(
 @Composable
 fun CalendarTaskSet(
     modifier: Modifier = Modifier,
+    initYear:Int,
+    initMonth:Int,
+    initDay:Int,
     startDayOfWeek: DayOfWeek = DayOfWeek.Monday,
     onSelectedDay: (year: Int, month: Int, day: Int) -> Unit,
     onBack: () -> Unit,
@@ -205,37 +252,28 @@ fun CalendarTaskSet(
 
 
     val calendar = PersianDate()
-    var selectedDay by remember {
-        mutableStateOf(0)
+
+    var year by remember {
+        mutableStateOf(initYear)
+    }
+
+    var month by remember {
+        mutableStateOf(initMonth)
+
+    }
+
+    var day by remember {
+        mutableStateOf(initDay)
     }
     val confirmToNext by remember {
         derivedStateOf {
             mutableStateOf(
-                selectedDay != 0
+                day != 0
             )
         }
 
     }
-    var year by remember {
-        mutableStateOf(calendar.grgYear)
-    }
 
-    var month by remember {
-        mutableStateOf(calendar.grgMonth)
-
-    }.also {
-        if (it.value > 12) {
-            it.value = 1
-            year += 1
-        }
-
-
-        if (it.value < 1) {
-            it.value = 12
-            year -= 1
-
-        }
-    }
     val firstDayOfMonth by remember {
         derivedStateOf {
             mutableStateOf(
@@ -252,127 +290,234 @@ fun CalendarTaskSet(
     repeat(firstDayOfMonth.value) {
         daysList.add(null)
     }
+
     repeat(calendar.getGrgMonthLength(year, month)) {
         daysList.add(it + 1)
     }
 
-    Card(modifier = modifier.padding(8.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
-
+    Card(modifier = modifier
+        .padding(8.dp)
+        .wrapContentHeight(unbounded = true)
         ) {
-            LazyColumn(
-                modifier = Modifier.weight(7F)
+        Column(verticalArrangement = Arrangement.Top) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(8.dp)
+//                    .weight(7F)
+
             ) {
-                item {
-                    //make static name header of week based on starting day of week
-                    val daysWeek = mutableListOf(startDayOfWeek.toString().take(3))
-                    var day = startDayOfWeek
-                    repeat(7) {
-                        day = day.next()
-                        daysWeek.add(day.toString().take(3))
-                    }
-                    LazyRow(horizontalArrangement = Arrangement.Start) {
-                        items(daysWeek) {
-                            Box(
-                                modifier = Modifier.sizeIn(40.dp, 40.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
+                Column(
+                    modifier = Modifier.weight(7F)
+                ) {
+                    Row {
+                        //make static name header of week based on starting day of week
+                        val daysWeek = mutableListOf(startDayOfWeek.toString().take(3))
+                        var day = startDayOfWeek
+                        repeat(6) {
+                            day = day.next()
+                            daysWeek.add(day.toString().take(3))
+                        }
+                        Row(horizontalArrangement = Arrangement.Start) {
+                            daysWeek.forEach {
+                                Box(
+                                    modifier = Modifier.sizeIn(40.dp, 40.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
 
-                                Text(text = it)
+                                    Text(text = it)
 
 
+                                }
                             }
                         }
+
                     }
 
-                }
+                    Column {
+                        daysList.chunked(7).forEach { week ->
 
-                items(
+                            Row {
+                                week.forEach {
 
+                                    Box(
+                                        modifier = Modifier
+                                            .defaultMinSize(40.dp, 40.dp)
+                                            .clickable {
+                                                it?.let {
+                                                    day = it
+                                                }
 
-                    daysList.chunked(7)
-                ) { week ->
-                    LazyRow(horizontalArrangement = Arrangement.Start) {
-                        items(week) {
+                                            }
+                                            .background(
+                                                color = Color.Unspecified,
+                                                shape = CircleShape
+                                            )
+                                            .border(
+                                                2.dp,
+                                                if (it != null && day == it) MaterialTheme.colorScheme.onBackground else Color.Unspecified,
+                                                CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center,
 
-                            Box(
-                                modifier = Modifier
-                                    .sizeIn(40.dp, 40.dp)
-                                    .clickable {
+                                        ) {
                                         it?.let {
-                                            selectedDay = it
+                                            Text(text = it.toString())
                                         }
 
                                     }
-                                    .background(
-                                        color = Color.Unspecified,
-                                        shape = CircleShape
-                                    )
-                                    .border(
-                                        2.dp,
-                                        if (it != null && selectedDay == it) MaterialTheme.colorScheme.onBackground else Color.Unspecified,
-                                        CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center,
 
-                                ) {
-                                it?.let {
-                                    Text(text = it.toString())
                                 }
 
                             }
+
+
+
+
+
                         }
                     }
+
+
                 }
 
+
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(2F)
+
+                ) {
+
+                    IconButton(onClick = {
+                        calendar
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .addMonth()
+
+                        year = calendar.grgYear
+                        month = calendar.grgMonth
+                        day = calendar.grgDay
+                    }) {
+                        Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "")
+                    }
+                    Text(text = year.toString())
+                    Text(text = calendar.getGrgMonthName(month).take(3))
+                    IconButton(onClick = {
+                        calendar
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .subMonth()
+
+                        year = calendar.grgYear
+                        month = calendar.grgMonth
+                        day = calendar.grgDay
+                    }) {
+                        Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "")
+                    }
+                }
             }
 
-
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(2F)
-
+            Row(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+//                    .weight(2F)
             ) {
+                Button(modifier = Modifier
+                    .weight(0.7F)
+                    .wrapContentSize(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    border = BorderStroke(2.dp,MaterialTheme.colorScheme.onBackground)
+                    ,
+                    onClick = {
+                        year = calendar.grgYear
+                        month = calendar.grgMonth
+                        day = calendar.grgDay
+                    }) {
+                    Text(text = "Today")
 
-                IconButton(onClick = {
-                    month += 1
-                    selectedDay = 0
-                }) {
-                    Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "")
                 }
-                Text(text = year.toString())
-                Text(text = calendar.getGrgMonthName(month).take(3))
-                IconButton(onClick = {
-                    month -= 1
-                    selectedDay = 0
-                }) {
-                    Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "")
+
+
+                Button(modifier = Modifier
+                    .weight(0.9F)
+                    .wrapContentSize(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    border = BorderStroke(2.dp,MaterialTheme.colorScheme.onBackground),
+                    onClick = {
+                        calendar
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .addWeek()
+                        year = calendar.grgYear
+                        month = calendar.grgMonth
+                        day = calendar.grgDay
+                    }) {
+                    Text(text = "Next week")
+
                 }
+
+
+
+                Button(
+                    modifier = Modifier
+                        .weight(0.9F)
+                        .wrapContentSize(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    border = BorderStroke(2.dp,MaterialTheme.colorScheme.onBackground),
+                    onClick = {
+                        calendar
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .addMonth()
+                        year = calendar.grgYear
+                        month = calendar.grgMonth
+                        day = calendar.grgDay
+                    }
+                ) {
+                    Text(text = "Next month")
+                }
+
             }
+            Row(
+                modifier = Modifier
+
+                    .padding(8.dp)
+                    .fillMaxWidth()
+//                    .weight(2F)
+            ) {
+                Button(modifier = Modifier.weight(0.9F),
+                    onClick = { onBack() }) {
+                    Text(text = "Back")
+
+                }
+                Spacer(modifier = Modifier.weight(0.05F))
+                Button(
+                    modifier = Modifier.weight(0.9F),
+                    onClick = { onSelectedDay(year, month, day) },
+                    enabled = confirmToNext.value
+                ) {
+                    Text(text = "Next")
+                }
+
+            }
+
         }
 
-        Row(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-        ) {
-            Button(modifier = Modifier.weight(0.9F),
-                onClick = { onBack() }) {
-                Text(text = "Back")
-
-            }
-            Spacer(modifier = Modifier.weight(0.05F))
-            Button(
-                modifier = Modifier.weight(0.9F),
-                onClick = { onSelectedDay(year, month, selectedDay) },
-                enabled = confirmToNext.value
-            ) {
-                Text(text = "Next")
-            }
-
-        }
 
     }
 
@@ -384,20 +529,41 @@ fun CalendarTaskSet(
 @Composable
 fun ClockTaskSet(
     modifier: Modifier = Modifier,
+    initStartHour: Int = 0,
+    initStartMinute: Int = 0,
+    initEndHour: Int = 0,
+    initEndMinute: Int = 0,
     onBack: () -> Unit,
-    onSetStartDuration: (
+    onSetDuration: (
         startHour: Int,
-        startMinute: Int
-    ) -> Unit,
-    onSetEndDuration: (
+        startMinute: Int,
         endHour: Int,
         endMinute: Int
-    ) -> Unit,
-    confirmToSave: MutableState<Boolean>,
-    saveData: () -> Unit
+
+    ) -> Unit
 
 ) {
+    var minDuration = 10
 
+    var startHour by remember {
+        mutableStateOf(initStartHour)
+    }
+    var startMinute by remember {
+        mutableStateOf(initStartMinute)
+    }
+    var endHour by remember {
+        mutableStateOf(initEndHour)
+    }
+    var endMinute by remember {
+        mutableStateOf(initEndMinute)
+    }
+
+    val confirmToNext by remember {
+        derivedStateOf {
+            "$endHour$endMinute".toInt() - "$startHour$startMinute".toInt() >= minDuration
+        }
+
+    }
 
     Card(
         modifier = modifier.padding(8.dp)
@@ -419,12 +585,17 @@ fun ClockTaskSet(
 
                 ) {
                     Text(text = "From")
-                    ClockComponent() { hour, minute ->
-                        onSetStartDuration(hour, minute)
+                    ClockComponent(startHour,startMinute) { hour, minute ->
+                        startHour = hour
+                        startMinute = minute
+
+
+
                     }
                     Text(text = "to")
-                    ClockComponent() { hour, minute ->
-                        onSetEndDuration(hour, minute)
+                    ClockComponent(endHour,endMinute) { hour, minute ->
+                        endHour = hour
+                        endMinute = minute
                     }
                 }
 
@@ -443,10 +614,12 @@ fun ClockTaskSet(
             Spacer(modifier = Modifier.weight(0.05F))
             Button(
                 modifier = Modifier.weight(0.9F),
-                onClick = { saveData() },
-                enabled = confirmToSave.value
+                onClick = {
+                    onSetDuration(startHour,startMinute,endHour,endMinute)
+                          },
+                enabled = confirmToNext
             ) {
-                Text(text = "Save")
+                Text(text = "Next")
             }
 
         }
@@ -458,14 +631,14 @@ fun ClockTaskSet(
 
 
 @Composable
-fun ClockComponent(onSetClock: (hour: Int, minute: Int) -> Unit) {
+fun ClockComponent(initHour: Int,initMinute:Int,onSetClock: (hour: Int, minute: Int) -> Unit) {
 
 
     var hour by remember {
-        mutableStateOf(0)
+        mutableStateOf(initHour)
     }
     var minute by remember {
-        mutableStateOf(0)
+        mutableStateOf(initMinute)
     }
     var direction by remember {
         mutableStateOf(true)
@@ -604,7 +777,7 @@ fun ClockComponent(onSetClock: (hour: Int, minute: Int) -> Unit) {
                                         if (minute > 0) minute--
                                     } else if (basicDelta > 0) {
                                         direction = false
-                                        if (minute < 23) minute++
+                                        if (minute < 59) minute++
                                     }
                                 }
 
@@ -770,14 +943,30 @@ fun ColorPicker(
     modifier: Modifier = Modifier,
     categories: List<Category>,
     onBack: () -> Unit,
-    confirmToNext: MutableState<Boolean>,
-    onSetCategory: (category: Category) -> Unit,
-    onTemporaryCategory: (category: Category) -> Unit
-
+    onSetCategory: (category: Category) -> Unit
 ) {
-
+    val confirmToNext by remember{ mutableStateOf(true)}
     val colorState: MutableState<Color> = remember { mutableStateOf(Color.Yellow) }
-    var categoryName by remember { mutableStateOf("") }
+    val categoryName by remember {
+        derivedStateOf {
+            var name  = ""
+            categories.forEach {
+                if (categoryToColor(it.color) == colorState.value)
+                    name =  it.name
+            }
+
+            if (!categories.any { categoryToColor( it.color) == colorState.value})
+                  name =   ""
+            mutableStateOf(name)
+        }
+    }
+    val name by remember {
+        derivedStateOf {
+            mutableStateOf(categoryName.value)
+        }
+    }
+
+
     Card(
         modifier = modifier
             .padding(8.dp)
@@ -804,6 +993,8 @@ fun ColorPicker(
 
 
             }
+
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -812,38 +1003,33 @@ fun ColorPicker(
 
                 val maxCharacter = 25
                 val focusManager = LocalFocusManager.current
-
-                categories.forEach {
-                    if (categoryToColor(it.color) == colorState.value)
-                        categoryName = it.name
-
+                val focusRequester = FocusRequester()
+                LaunchedEffect(Unit){
+                    focusRequester.requestFocus()
                 }
 
-
-                if (!categories.any { it.color == colorToCategoryGroup(colorState.value) })
-                    categoryName = ""
-
                 OutlinedTextField(
-                    value = categoryName,
+                    value = name.value,
+                    placeholder = { Text(text = "write category's name") },
                     label = { Text(text = "Category") },
-                    onValueChange = {
-                        if (it.length <= maxCharacter) {
-                            categoryName = it
-                            onTemporaryCategory(
-                                Category(
-                                    categoryName,
-                                    colorToCategoryGroup(
-                                        colorState.value
-                                    )
-                                )
-                            )
-                        }
-                    }, keyboardOptions = KeyboardOptions.Default.copy(
+                    onValueChange = {if (it.length <= maxCharacter) name.value = it},
+                    keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ), keyboardActions = KeyboardActions(onDone = {
+//                        if (confirmToNext)
+//                            onSetCategory(
+//                                Category(
+//                                    name = name.value,
+//                                    color = colorToCategoryGroup(colorState.value)
+//                                )
+//                            )
                         focusManager.clearFocus()
-
-                    }), singleLine = true, modifier = Modifier.fillMaxWidth()
+                    }), singleLine = true, modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    supportingText = {
+                        Text(text = "Have just one category for each color ")
+                    }
                 )
 
 
@@ -867,12 +1053,12 @@ fun ColorPicker(
                         onClick = {
                             onSetCategory(
                                 Category(
-                                    name = categoryName,
+                                    name = name.value,
                                     color = colorToCategoryGroup(colorState.value)
                                 )
                             )
                         },
-                        enabled = confirmToNext.value
+                        enabled = confirmToNext
                     ) {
                         Text(text = "Next")
                     }
@@ -885,6 +1071,7 @@ fun ColorPicker(
 
 
     }
+
 
 //    Card (
 //        modifier = modifier
@@ -946,28 +1133,28 @@ fun AddTaskPreview() {
 //            }
 
 
-//            CalendarTaskSet(modifier = Modifier.wrapContentHeight(), onSelectedDay = { _, _, _ ->
+//            CalendarTaskSet(
+//                initYear = 2023,
+//                initMonth = 9,
+//                initDay = 27,
+//                onSelectedDay = { year, month, day ->
 //
-//            }
-//
-//            ) {
+//                }) {
 //
 //            }
             val list = mutableListOf<Category>()
-            repeat(1) {
+            repeat(5) {
                 list.add(
-                    Category("Inbox", it)
+                    Category("cat $it", it)
                 )
             }
 
             ColorPicker(
                 modifier = Modifier.wrapContentHeight(),
                 categories = list, onBack = {},
-                confirmToNext = remember { mutableStateOf(false) }, onSetCategory = {
-
-                }) {
-
-                   }
+                onSetCategory = {
+                }
+            )
 //            ClockTaskSet(modifier = Modifier,
 //                onBack = {},
 //                onSetStartDuration = { _,_ ->},
