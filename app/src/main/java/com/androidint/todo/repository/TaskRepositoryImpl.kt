@@ -13,11 +13,11 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.insert(task)
     }
 
-    suspend fun getAll(): Flow<List<Task>> {
+     fun getAll(): Flow<List<Task>> {
         return taskDao.getAll()
     }
 
-    suspend fun getAllNoDone(): Flow<List<Task>> {
+     fun getAllNoDone(): Flow<List<Task>> {
         return taskDao.getAllNoDone()
     }
 
@@ -29,7 +29,7 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.findById(id)
     }
 
-    suspend fun getCategoriesWithTasks():Flow<List<CategoryWithTasks>>{
+    fun getCategoriesWithTasks():Flow<List<CategoryWithTasks>>{
         return taskDao.getCategoriesWithTasks()
     }
 

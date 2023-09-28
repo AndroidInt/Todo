@@ -3,7 +3,6 @@ package com.androidint.todo.repository.room
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -15,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TaskDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insert(task: Task)
 
     @Query("SELECT * FROM Task")
@@ -30,6 +29,8 @@ interface TaskDao {
     @Query("SELECT * FROM TASK T WHERE T.taskId ==:id")
     suspend fun findById(id:Int): Task?
 
+
+
     @Transaction
     @Query("SELECT * FROM Category")
     fun getCategoriesWithTasks(): Flow<List<CategoryWithTasks>>
@@ -43,7 +44,7 @@ interface TaskDao {
 @Dao
 interface CategoryDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE )
+    @Insert
     suspend fun insert(category: Category)
 
     @Query("SELECT * FROM Category")
@@ -56,7 +57,15 @@ interface CategoryDao {
     suspend fun findById(id:Int): Category?
 
     @Query("SELECT * FROM Category T WHERE T.name == :name")
-    suspend fun getId(name:String): Category?
+    suspend fun getCategoryByName(name:String): Category?
+
+    @Query("SELECT * FROM Category T WHERE T.color == :color")
+    suspend fun getCategoryByColor(color:Int): Category?
+
+
+
+
+
 
     @Update
     suspend fun updateCategory(category: Category)

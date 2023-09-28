@@ -1,7 +1,6 @@
-package com.androidint.todo.screen
+package com.androidint.todo.screen.addtask
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -10,34 +9,41 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.androidint.todo.repository.model.Category
+import com.androidint.todo.repository.model.Day
+import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TimeTask
 import com.androidint.todo.utils.DataStore.Companion.categoryToColor
 import saman.zamani.persiandate.PersianDate
 
+/*
+TODO:
+show congratulations when client add task successfully
+
+
+ */
 fun MutableList<MutableState<Boolean>>.next() {
 
     val trueIndex = this.filter {
@@ -66,7 +72,23 @@ fun MutableList<MutableState<Boolean>>.back() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AddTaskScreen() {
+fun AddTaskScreen(
+
+    conflictedDurationState: State<Boolean>,
+
+    conflictedCategoryState: State<Boolean>,
+
+    categoryList: SnapshotStateList<Category>,
+
+    updateRequest: State<Boolean>,
+
+    addTask: (task: Task, category: Category) -> Unit,
+
+    updateTask: (task: Task, category: Category) -> Unit,
+
+//    resetState : () -> Unit
+
+    ) {
 
 
     // state values
@@ -111,15 +133,16 @@ fun AddTaskScreen() {
         mutableStateOf("")
     }
     var category by remember {
-        mutableStateOf(Category("Inbox", 0))
-    }
+        mutableStateOf(
+            if (categoryList.toList().isNotEmpty())
+                Category(categoryList.toList()[0].name,categoryList.toList()[0].color)
+                        else{
+                Category("Inbox", 0)
+                        }
 
-    var catList = mutableListOf<Category>()
-    repeat(2) {
-        catList.add(
-            Category("Inbox $it", it)
         )
     }
+
 
     val minDuration = 10
     val timeTask by remember {
@@ -245,114 +268,82 @@ fun AddTaskScreen() {
 
 
                 }
-                Row (
+                if (conflictedCategoryState.value || conflictedDurationState.value) {
+                    Row(
+                        Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(text = "Error :", modifier = Modifier.weight(1F))
+                        Text(
+                            text = "there is a conflict in time or date!",
+                            modifier = Modifier.weight(1F),
+                            color = Color.Red
+                        )
+                    }
+                }
+                Row(
                     Modifier
                         .padding(8.dp)
-                        .fillMaxWidth()){
-                    Button(modifier = Modifier.weight(0.9F),
+                        .fillMaxWidth()
+                ) {
+                    Button(
+                        modifier = Modifier.weight(0.9F),
                         onClick = {
                             stack.back()
                         },
                         enabled = saveTaskState.value
-                        ) {
+                    ) {
                         Text(text = "Edit")
                     }
                     Spacer(modifier = Modifier.weight(0.01F))
-                    Button(modifier = Modifier.weight(0.9F),
+                    Button(
+                        modifier = Modifier.weight(0.9F),
                         onClick = {
+                            var task = Task(
+                                title,description,
+                                Day(
+                                    calendar.setGrgDay(dayP.value)
+                                        .setGrgMonth(monthP.value)
+                                        .setGrgYear(yearP.value).dayOfWeek(),
+                                    dayP.value,
+                                    month = monthP.value,
+                                    year = yearP.value
+                                ),
+                                0,
+                                timeDuration = timeTask,
+                                1,
+                                done = false
+                            )
+
+                            if (!updateRequest.value) {
+                                addTask(task,category)
+
+                            } else {
+                                updateTask(task,category)
+                            }
+                            if (conflictedCategoryState.value && conflictedDurationState.value){
+
+                                title = ""
+                                description = ""
+                                dayP.value = calendar.grgDay
+                                monthP.value = calendar.grgMonth
+                                yearP.value = calendar.grgYear
+
+
+                            }
 
                         },
                         enabled = saveTaskState.value
-                        ) {
-                        Text(text = "Save")
+                    ) {
+                        Text(
+                            text =
+                            if (updateRequest.value) "Update Task" else "Add Task"
+                        )
                     }
 
                 }
 
-
-//                Divider()
-//                Row(
-//                    modifier = Modifier
-//                        .padding(8.dp)
-//                        .fillMaxWidth(),
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.SpaceBetween
-//                ) {
-//
-//                    Text(text = "Every : ")
-//
-//
-//
-//                    val radioText = listOf("noting","day","week","month")
-//
-////                    GroupedRadioButton(mItems = radioText)
-//
-//
-//
-//
-//                    val mutableStates = listOf(
-//                        remember{
-//                            mutableStateOf(true)
-//                        },
-//                        remember{
-//                            mutableStateOf(false)
-//                        },
-//                        remember{
-//                            mutableStateOf(false)
-//                        },
-//                        remember{
-//                            mutableStateOf(false)
-//                        },
-//
-//                    )
-//                    repeat(4){
-//                        Column {
-//                            Row(verticalAlignment = Alignment.CenterVertically,
-//                                modifier = Modifier.selectable(
-//                                    selected = mutableStates[it].value,
-//                                    onClick = {mutableStates[it].value = true}
-//                                )
-//                                ) {
-//                                Text(text = radioText[it])
-//                                RadioButton(selected = mutableStates[it].value,
-//                                    onClick = null
-//                                )
-//                            }
-//
-//                        }
-//                    }
-//
-////                    RadioButton(selected = everyNothing, onClick = {
-////                        everyDay = false
-////                        everyWeek = false
-////                        everyMonth = false
-////                        everyNothing = true
-////                    })
-//
-////                    Text(text = "Day")
-////                    RadioButton(selected = everyDay, onClick = {
-////                        everyWeek = false
-////                        everyMonth = false
-////                        everyNothing = false
-////                        everyDay = true
-////
-////                    })
-////                    Text(text = "Week")
-////                    RadioButton(selected = everyWeek, onClick = {
-////                        everyDay = false
-////                        everyMonth = false
-////                        everyNothing = false
-////                        everyWeek = true
-////                    })
-////                    Text(text = "Month")
-////                    RadioButton(selected = everyMonth, onClick = {
-////                        everyDay = false
-////                        everyWeek = false
-////                        everyNothing = false
-////                        everyMonth = true
-////                    })
-//
-//                }
             }
 
 
@@ -420,8 +411,8 @@ fun AddTaskScreen() {
             }
             if (colorState.value) {
                 ColorPicker(
-                    //TODO(pass category list from view-model)
-                    categories = catList,
+
+                    categories = categoryList.toList(),
                     onBack = { stack.back() },
                     //TODO(pass confirm for category selected)
                     onSetCategory = {
@@ -436,28 +427,11 @@ fun AddTaskScreen() {
 
 
 }
-@Composable
-fun GroupedRadioButton(mItems: List<String>) {
-    val mRememberObserver = remember { mutableStateOf("") }
-
-    Column {
-        mItems.forEach { mItem ->
-            Row {
-                RadioButton(
-                    selected = mRememberObserver.value == mItem,
-                    onClick = { mRememberObserver.value = mItem },
-                    enabled = true,
-                )
-            }
-            Text(text = mItem, modifier = Modifier.padding(start = 8.dp))
-        }
-    }
-}
 
 
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 fun ShowAddTaskScreen() {
-    AddTaskScreen()
+//    AddTaskScreen()
 }

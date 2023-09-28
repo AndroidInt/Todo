@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import java.time.LocalTime
 
 
 /*
@@ -19,7 +20,7 @@ data class Task(
     val description: String?,
     @Embedded
     val day: Day,
-    val ownerCategoryId: Int,
+    var ownerCategoryId: Int,
     @Embedded
     val timeDuration: TimeTask,
     val priority: Int = 1,
@@ -67,6 +68,23 @@ data class TimeTask(
         return "${other.startHour.toString()}${other.startMinute.toString()}".toInt()
     }
 
+
+    fun isConflicted(other:TimeTask):Boolean{
+
+        val start = "${this.startHour}${this.startMinute}".toInt()
+        val secondStart = "${other.startHour}${other.startMinute}".toInt()
+        val end = "${this.endHour}${this.endMinute}".toInt()
+        val secondEnd = "${other.endHour}${other.endMinute}".toInt()
+
+
+        if (secondStart or secondEnd in (start + 1) until end)
+            return true
+        if ( start or end in (secondStart+1) until secondEnd )
+            return true
+
+        return false
+    }
+
     fun eventDuration(): Int {
         val hour = endHour - startHour
         val min = endMinute - startMinute
@@ -80,7 +98,7 @@ data class TimeTask(
 
 @Entity(indices = [Index(value = ["name","color"], unique = true)])
 data class Category(
-    @ColumnInfo(name = "name") val name: String = "Inbox",
+    @ColumnInfo(name = "name") var name: String = "Inbox",
     @ColumnInfo(name = "color") val color: Int = 0,
 ) {
     @PrimaryKey(autoGenerate = true)
