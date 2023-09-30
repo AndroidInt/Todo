@@ -18,6 +18,7 @@ class DataStore {
             Color.Red,
             Color.Gray
         )
+
         fun categoryToColor(categoryId :Int):Color{
             return when (categoryId){
                 0 -> Color.Yellow
@@ -40,6 +41,13 @@ class DataStore {
                 else -> {0}
             }
         }
-
+        fun getDayOfWeek(index :Int):String {
+            val dayOfWeek = listOf(
+                "Mon", "Tue", "Wed", "Thu", "Fri","Sat", "Sun"
+            )
+            return dayOfWeek[index]
+        }
     }
+
+
 }

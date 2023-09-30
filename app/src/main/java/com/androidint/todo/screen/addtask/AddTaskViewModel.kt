@@ -1,11 +1,8 @@
 package com.androidint.todo.screen.addtask
 
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,10 +10,8 @@ import com.androidint.todo.repository.CategoryRepositoryImpl
 import com.androidint.todo.repository.TaskRepositoryImpl
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Task
-import com.androidint.todo.repository.model.TimeTask
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,7 +26,7 @@ TODO :
 
  */
 @HiltViewModel
-class AddTaskScreenViewModel @Inject constructor(
+class AddTaskViewModel @Inject constructor(
     private val taskRepository: TaskRepositoryImpl,
     private val categoryRepository: CategoryRepositoryImpl,
 ) : ViewModel() {
