@@ -1,5 +1,6 @@
 package com.androidint.todo.repository.model
 
+import androidx.compose.ui.graphics.vector.RootGroupName
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -18,7 +19,7 @@ import java.time.LocalTime
 data class Task(
     val title: String,
     val description: String?,
-    @Embedded
+    @Embedded(prefix = "day_")
     val day: Day,
     var ownerCategoryId: Int,
     @Embedded
@@ -44,7 +45,7 @@ enum class DayOfWeek() {
         val values = DayOfWeek.values()
         val size = values.size
         var nextOrdinal = (ordinal + 1)
-        if(nextOrdinal > size-1)
+        if (nextOrdinal > size - 1)
             nextOrdinal = 0
         return values[nextOrdinal]
     }
@@ -55,7 +56,16 @@ class Day(
     val dayOfMonth: Int,
     val month: Int,
     val year: Int
-)
+) {
+    fun equal(other: Day): Boolean {
+        return other.dayOfWeek == this.dayOfWeek &&
+                other.dayOfMonth == this.dayOfMonth &&
+                other.month == this.month &&
+                other.year == this.year
+    }
+
+
+}
 
 
 data class TimeTask(
@@ -69,7 +79,7 @@ data class TimeTask(
     }
 
 
-    fun isConflicted(other:TimeTask):Boolean{
+    fun isConflicted(other: TimeTask): Boolean {
 
         val start = "${this.startHour}${this.startMinute}".toInt()
         val secondStart = "${other.startHour}${other.startMinute}".toInt()
@@ -79,7 +89,7 @@ data class TimeTask(
 
         if (secondStart or secondEnd in (start + 1) until end)
             return true
-        if ( start or end in (secondStart+1) until secondEnd )
+        if (start or end in (secondStart + 1) until secondEnd)
             return true
 
         return false
@@ -94,9 +104,10 @@ data class TimeTask(
     fun offsetTimeToMinutes(): Int {
         return startHour * 60 + startMinute
     }
+
 }
 
-@Entity(indices = [Index(value = ["name","color"], unique = true)])
+@Entity(indices = [Index(value = ["name", "color"], unique = true)])
 data class Category(
     @ColumnInfo(name = "name") var name: String = "Inbox",
     @ColumnInfo(name = "color") val color: Int = 0,

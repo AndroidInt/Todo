@@ -12,6 +12,7 @@ import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,114 +37,133 @@ class AddTaskViewModel @Inject constructor(
     private var _conflictedCategoryState = mutableStateOf(false)
     val conflictedCategoryState: State<Boolean> = _conflictedCategoryState
     private var _categoryList = mutableStateListOf<Category>()
-    val categoryList : SnapshotStateList<Category> = _categoryList
+    val categoryList: SnapshotStateList<Category> = _categoryList
     private var _updateRequest = mutableStateOf(false)
-    val updateRequest :State<Boolean> = _updateRequest
+    val updateRequest: State<Boolean> = _updateRequest
+
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-             categoryRepository.getAll().collect{
-                 _categoryList.addAll(it)
+        viewModelScope.launch {
+            categoryRepository.getAll().collect {
+                _categoryList.clear()
+                _categoryList.addAll(it)
             }
         }
     }
-    fun resetState(){
+
+    fun resetState() {
         _conflictedCategoryState.value = false
         _conflictedDurationState.value = false
         _updateRequest.value = false
 
     }
+
     fun addTask(task: Task, category: Category) {
 
-        viewModelScope.launch(context = Dispatchers.IO) {
-            taskRepository.getAll().collect { it ->
-                val subList = it.filter {
-                    it.day.year == task.day.year &&
-                            it.day.month == task.day.month &&
-                            it.day.dayOfMonth == task.day.dayOfMonth
+        viewModelScope
+            .launch(context = Dispatchers.IO)
+            {
+                preprocessInsertTask(task, category)
+                if (!conflictedDurationState.value && !conflictedCategoryState.value) {
 
-                }.toList()
-                _conflictedDurationState.value = subList.any { item ->
-                    item.timeDuration.isConflicted(task.timeDuration)
-                }
-            }
-            categoryRepository.getAll().collect {
-                _conflictedCategoryState.value = it.any { item ->
-                    item.name == category.name && item.color != category.color
-                }
-            }
+                    // change category name if there are a changes in category
+                    val categoryFromRoom = categoryRepository.getCategoryByColor(category.color)
+                    categoryFromRoom?.let {
+                        if (category.name != it.name) {
+                            it.name = category.name
+                            updateCategory(it)
 
-            if (!conflictedDurationState.value && !conflictedCategoryState.value) {
-
-                categoryRepository.getCategoryByName(category.name)
-                val categoryFromRoom = categoryRepository.getCategoryByColor(category.color)
-
-                categoryFromRoom?.let {
-                    if (category.name != it.name) {
-                        it.name = category.name
-                        categoryRepository.updateCategory(it)
+                        }
                     }
+                    if (categoryFromRoom == null)
+                        insertCategory(category)
+
+                    task.ownerCategoryId =
+                        categoryRepository.getCategoryByName(category.name)!!.categoryId
+                    taskRepository.insert(task)
+
+                    resetState()
                 }
-                if (categoryFromRoom == null)
-                    categoryRepository.insert(category)
 
-                task.ownerCategoryId = categoryRepository.getCategoryByName(category.name)!!.categoryId
-                taskRepository.insert(task)
-                resetState()
+
             }
+    }
 
+    private suspend fun updateCategory(category: Category) {
+        categoryRepository.updateCategory(category)
+    }
+
+    private suspend fun insertCategory(category: Category) {
+        categoryRepository.insert(category)
+    }
+
+
+    private suspend fun preprocessInsertTask(task: Task, category: Category) {
+        viewModelScope.launch(context = Dispatchers.IO) {
+            _conflictedDurationState.value =
+                taskRepository.getTaskByDate(task.day.year, task.day.month, task.day.dayOfMonth)
+                    .firstOrNull()?.any { item ->
+                        item.timeDuration.isConflicted(task.timeDuration)
+                    } == true
+
+            _conflictedCategoryState.value = categoryRepository.getAll()
+                .firstOrNull()?.any { item ->
+                    item.name == category.name && item.color != category.color
+                } == true
 
         }
     }
 
+    private suspend fun preprocessUpdateTask(task: Task, category: Category) {
+
+        _conflictedDurationState.value = taskRepository
+            .getTaskByDate(task.day.year, task.day.month, task.day.dayOfMonth)
+            .firstOrNull()?.any { item ->
+                if (item.timeDuration != task.timeDuration) {
+                    item.timeDuration.isConflicted(task.timeDuration)
+                } else {
+                    false
+                }
+            } == true
+
+
+        categoryRepository.getAll().collect {
+            _conflictedCategoryState.value = it.any { item ->
+                item.name == category.name && item.color != category.color
+            }
+        }
+    }
+
+
     fun updateTask(task: Task, category: Category) {
 
         viewModelScope.launch(context = Dispatchers.IO) {
-            taskRepository.getAll().collect { it ->
-                val subList = it.filter {
-                    it.day.year == task.day.year &&
-                            it.day.month == task.day.month &&
-                            it.day.dayOfMonth == task.day.dayOfMonth
 
-                }.toList()
-                _conflictedDurationState.value = subList.any { item ->
-                    if (item.timeDuration != task.timeDuration )
-                    {
-                        item.timeDuration.isConflicted(task.timeDuration)
-                    }else{
-                        false
-                    }
-                }
-            }
-            categoryRepository.getAll().collect {
-                _conflictedCategoryState.value = it.any { item ->
-                    item.name == category.name && item.color != category.color
-                }
-            }
+            preprocessUpdateTask(task, category)
+
+
 
             if (!conflictedDurationState.value && !conflictedCategoryState.value) {
 
-                categoryRepository.getCategoryByName(category.name)
+                // change category name if there are a changes in category
                 val categoryFromRoom = categoryRepository.getCategoryByColor(category.color)
 
                 categoryFromRoom?.let {
                     if (category.name != it.name) {
                         it.name = category.name
-                        categoryRepository.updateCategory(it)
+                        updateCategory(it)
                     }
                 }
                 if (categoryFromRoom == null)
-                    categoryRepository.insert(category)
+                    insertCategory(category)
 
-                task.ownerCategoryId = categoryRepository.getCategoryByName(category.name)!!.categoryId
+                task.ownerCategoryId =
+                    categoryRepository.getCategoryByName(category.name)!!.categoryId
                 taskRepository.updateTask(task)
                 resetState()
             }
 
 
         }
-
-
-
 
 
     }

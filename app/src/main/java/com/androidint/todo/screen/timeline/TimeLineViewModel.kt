@@ -8,9 +8,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.androidint.todo.repository.CategoryRepositoryImpl
 import com.androidint.todo.repository.TaskRepositoryImpl
+import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import saman.zamani.persiandate.PersianDate
 import javax.inject.Inject
 
@@ -40,11 +47,23 @@ class TimeLineViewModel @Inject constructor(
     val year: State<Int> = _year
     private var _day = mutableStateOf(calendar.grgDay)
     val day: State<Int> = _day
-    private var _monthName = mutableStateOf(calendar.monthName)
+    private var _monthName = mutableStateOf(calendar.grgMonthName)
     val monthName: State<String> = _monthName
     private var _tasks = mutableStateListOf<Task>()
     val tasks: SnapshotStateList<Task> = _tasks
+    private var _categories = mutableStateListOf<Category>()
+    val categories: SnapshotStateList<Category> = _categories
 
+    init {
+        viewModelScope.launch() {
+
+                categoryRepositoryImpl.getAll().collect{
+                    _categories.addAll(it)
+                }
+
+        }
+        setTasksToday()
+    }
 
 
 
@@ -58,24 +77,9 @@ class TimeLineViewModel @Inject constructor(
         _year.value = calendar.grgYear
         _month.value = calendar.grgMonth
         _day.value = calendar.grgDay
-        _monthName.value = calendar.monthName
+        _monthName.value = calendar.grgMonthName
 
-        viewModelScope.launch {
-
-            taskRepositoryImpl.getAll().collect{ list ->
-                _tasks.clear()
-                _tasks.addAll( list.filter {
-                    it.day.dayOfMonth == day.value && it.day.month == month.value && it.day.year == year.value
-                }.toList())
-            }
-
-        }
-
-
-
-
-
-
+        setTasksToday()
     }
     fun nextMonth() {
         calendar
@@ -87,18 +91,9 @@ class TimeLineViewModel @Inject constructor(
         _year.value = calendar.grgYear
         _month.value = calendar.grgMonth
         _day.value = calendar.grgDay
-        _monthName.value = calendar.monthName
+        _monthName.value = calendar.grgMonthName
 
-        viewModelScope.launch {
-
-            taskRepositoryImpl.getAll().collect{ list ->
-                _tasks.clear()
-                _tasks.addAll( list.filter {
-                    it.day.dayOfMonth == day.value && it.day.month == month.value && it.day.year == year.value
-                }.toList())
-            }
-
-        }
+        setTasksToday()
 
     }
     fun setDay(dayOfMonth:Int) {
@@ -109,18 +104,16 @@ class TimeLineViewModel @Inject constructor(
         _month.value = calendar.grgMonth
         _day.value = calendar.grgDay
 
+        setTasksToday()
+    }
 
+    private fun setTasksToday(){
         viewModelScope.launch {
-
-            taskRepositoryImpl.getAll().collect{ list ->
-                _tasks.clear()
-                _tasks.addAll( list.filter {
-                    it.day.dayOfMonth == day.value && it.day.month == month.value && it.day.year == year.value
-                }.toList())
+            _tasks.clear()
+            taskRepositoryImpl.getTaskByDate(day = day.value,month = month.value,year = year.value).collect{
+                _tasks.addAll(it)
             }
-
         }
-
     }
 
 

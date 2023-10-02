@@ -34,6 +34,8 @@ import androidx.compose.runtime.getValue
 
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.androidint.todo.repository.model.Category
+import com.androidint.todo.repository.model.Day
 
 import com.androidint.todo.repository.model.Task
 
@@ -46,7 +48,8 @@ fun TimeLineScreen(
     day: State<Int>,
     setDay: (Int) -> Unit,
     monthName: State<String>,
-    tasks: SnapshotStateList<Task>
+    tasks: SnapshotStateList<Task>,
+    categories : SnapshotStateList<Category>
 
 ) {
     Column(Modifier.fillMaxWidth()) {
@@ -151,7 +154,13 @@ fun TimeLineScreen(
         val rememberScrollState = rememberScrollState()
         EventLayout(
             modifier = Modifier
-                .verticalScroll(rememberScrollState), tasks = tasks.toList()
+                .verticalScroll(rememberScrollState),
+            tasks = tasks.toList(),
+            categories = categories,
+            day = Day(
+                calendar.setGrgYear(year.value).setGrgMonth(month.value).setGrgDay(day.value).dayOfWeek(),
+                day.value,month.value,year.value
+            )
         )
     }
 

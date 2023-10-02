@@ -13,11 +13,11 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.insert(task)
     }
 
-     fun getAll(): Flow<List<Task>> {
+    fun getAll(): Flow<List<Task>> {
         return taskDao.getAll()
     }
 
-     fun getAllNoDone(): Flow<List<Task>> {
+    fun getAllNoDone(): Flow<List<Task>> {
         return taskDao.getAllNoDone()
     }
 
@@ -35,6 +35,10 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
 
     suspend fun updateTask(task : Task){
         return taskDao.updateTask(task)
+    }
+
+    suspend fun getTaskByDate(year:Int,month:Int,day:Int):Flow<List<Task>>{
+        return taskDao.getTaskByDate(year,month,day)
     }
 
 

@@ -38,6 +38,9 @@ interface TaskDao {
     @Update
     suspend fun updateTask(task: Task)
 
+    @Query("SELECT * FROM TASK WHERE day_dayOfMonth ==:day AND day_month==:month AND day_year==:year")
+    fun getTaskByDate(year: Int, month: Int, day: Int): Flow<List<Task>>
+
 
 }
 

@@ -2,6 +2,7 @@ package com.androidint.todo.screen.timeline
 
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Day
 import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TimeTask
@@ -87,51 +89,93 @@ fun Modifier.bottomBorder(strokeWidth: Dp, color: Color) = composed(
 fun EventLayout(
     modifier: Modifier = Modifier,
     tasks: List<Task>,
-    timeBar: @Composable (hour: Int, minute: Int) -> Unit = { hour, minute ->
-        val hourHeight = 120.dp
-        Box(
-            modifier = Modifier
-                .height(hourHeight)
-                .bottomBorder(1.dp, MaterialTheme.colorScheme.onPrimary)
-                .taskData(null, false)
-        ) {
-            BasicSidebarLabel(hour, minute)
-        }
-    },
-    content: @Composable (task: Task) -> Unit = {
-        BasicEvent(task = it)
-
+    categories: List<Category>,
+    day: Day,
+//    timeBar: @Composable (hour: Int, minute: Int) -> Unit = { hour, minute ->
+//        val hourHeight = 120.dp
+//        Box(
+//            modifier = Modifier
+//                .height(hourHeight)
+//                .bottomBorder(1.dp, MaterialTheme.colorScheme.onPrimary)
+//                .taskData(null, false)
+//        ) {
+//            BasicSidebarLabel(hour, minute)
+//        }
+//    },
+    content: @Composable (task: Task, category: Category) -> Unit = { task, category ->
+        BasicEvent(task = task, category = category)
     }
 ) {
-    val width = LocalConfiguration.current.screenWidthDp
+
     val hourHeight = 120.dp
+    val calendar = PersianDate()
+    val today = Day(calendar.dayOfWeek(),calendar.grgDay,calendar.grgMonth,calendar.grgYear)
     val time = remember {
         mutableStateOf(
-            Calendar.getInstance().get(Calendar.MINUTE)
-                    + Calendar.getInstance().get(Calendar.HOUR) * 60
+
+            calendar.minute
+                    + calendar.hour * 60
         )
     }
+    var minResolutionTime = 60
+    var minContentResolution = minResolutionTime
+
+
 
     Layout(
         modifier = modifier
             .fillMaxWidth(),
         content = {
-            (0..23).forEach {
-                timeBar(it, 0)
+
+            tasks.forEach {
+                if (minContentResolution > it.timeDuration.eventDuration())
+                    minContentResolution = it.timeDuration.eventDuration()
             }
+
+
+            if (minContentResolution < 40)
+                minResolutionTime = 30
+
+            if (minContentResolution < 30)
+                minResolutionTime = 20
+
+            if (minContentResolution < 20)
+                minResolutionTime = 10
+
+
+            repeat(24){ hour ->
+                repeat(60/minResolutionTime){ minute ->
+                    Box(
+                        modifier = Modifier
+                            .height(hourHeight)
+                            .bottomBorder(1.dp, MaterialTheme.colorScheme.onPrimary)
+                            .taskData(null, false)
+                    ) {
+                        BasicSidebarLabel(hour, minute*minResolutionTime)
+                    }
+                }
+            }
+
+
 
             tasks.sortedBy(Task::timeDuration).forEach { task ->
                 Box(
                     modifier = Modifier
                         .taskData(task, false)
                 ) {
-                    content(task)
+                    val category = categories.firstOrNull() {
+                        it.categoryId == task.ownerCategoryId
+                    }
+                    category?.let {
+                        content(task, category)
+                    }
+
                 }
             }
             //current time line
-            // TODO("if you are in the current day then current time should be showed")
-
-            Row(
+            // TODO("if you are in today then current time just should be showed")
+            if (day.equal(today))
+                Row(
                 modifier = Modifier
                     .taskData(null, true)
             ) {
@@ -155,7 +199,7 @@ fun EventLayout(
         }
     )
     { measurables, constraints ->
-        val height = hourHeight.roundToPx() * 24
+        val height = hourHeight.roundToPx() * 24 * 60/minResolutionTime
         val placeableWithTasks = measurables.map { measurable ->
 
             val task: Task? = (measurable.parentData as TaskDataModifier).task
@@ -164,7 +208,7 @@ fun EventLayout(
 
             val taskHeight =
                 ((task?.timeDuration?.eventDuration()
-                    ?.div(60f))?.times(hourHeight.toPx()))?.roundToInt()
+                    ?.div(minResolutionTime))?.times(hourHeight.toPx()))?.roundToInt()
 
             val placeable = if (task == null && !dividerExist) {
                 measurable.measure(
@@ -173,7 +217,7 @@ fun EventLayout(
                         minWidth = constraints.maxWidth / 5
                     )
                 )
-            } else if (task == null && dividerExist) {
+            } else if (task == null) {
                 measurable.measure(
                     constraints.copy(
                         maxWidth = constraints.maxWidth,
@@ -200,14 +244,7 @@ fun EventLayout(
 
         }
 
-        layout(
-            constraints.maxWidth
-//            constraints.maxWidth
-//            placeableWithTasks.maxOfOrNull {
-//            it.first.width
-//        } ?: 0
-            , height
-        ) {
+        layout(constraints.maxWidth, height) {
 
 
             var heightTimeBar = 0
@@ -217,7 +254,8 @@ fun EventLayout(
                 if (task == null) {
 
                     if (dividerExist) {
-                        val offsetTime = ((time.value / 60f) * hourHeight.toPx()).roundToInt()
+                        Log.d("time","${time.value}")
+                        val offsetTime = ((hourHeight.toPx() / minResolutionTime.toFloat()) * time.value.toFloat() ).roundToInt()
                         placeable.place(paddingHour + 10, offsetTime)
                     } else {
                         placeable.place(paddingHour, heightTimeBar)
@@ -227,7 +265,7 @@ fun EventLayout(
 
                 } else {
                     val taskOffsetMinutes = task.timeDuration.offsetTimeToMinutes()
-                    val taskY = ((taskOffsetMinutes.div(60f)).times(hourHeight.toPx())).roundToInt()
+                    val taskY = (((taskOffsetMinutes.toFloat() / minResolutionTime.toFloat()))*hourHeight.toPx()).roundToInt()
                     placeable.place(taskPadding, taskY)
                 }
 
@@ -269,6 +307,7 @@ fun Modifier.taskData(task: Task?, timeBarExist: Boolean) =
 fun BasicEvent(
     modifier: Modifier = Modifier,
     task: Task,
+    category: Category
 ) {
 
     Row(
@@ -286,7 +325,7 @@ fun BasicEvent(
                 .fillMaxHeight(1F)
                 .background(
                     //TODO("it must pass the task's color not ownerCategoryId")
-                    DataStore.categoryToColor(task.ownerCategoryId)
+                    DataStore.categoryToColor(category.color)
                 )
         )
 
@@ -295,7 +334,7 @@ fun BasicEvent(
         Column(Modifier.fillMaxWidth(0.92F)) {
             Spacer(modifier = Modifier.height(16.dp))
             //TODO("pass category name to Text from ViewModel which has a fun that convert Id to category's name")
-            Text(text = "meeting")
+            Text(text = category.name)
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = task.title)
             Spacer(modifier = Modifier.height(16.dp))
@@ -337,15 +376,15 @@ fun BasicSidebarLabel(
 
 @Composable
 fun ShowEventItem() {
-    BasicEvent(Modifier,
-    Task(
-            "Amanda Ruth's 1",
-            "",
-            Day(3, 2, 3, 1990),
-            1,
-            TimeTask(1, 0, 2, 50)
-        )
-    )
+//    BasicEvent(Modifier,
+//    Task(
+//            "Amanda Ruth's 1",
+//            "",
+//            Day(3, 2, 3, 1990),
+//            1,
+//            TimeTask(1, 0, 2, 50)
+//        )
+//    )
 }
 //@Composable
 //fun BasicEventPreview() {
@@ -562,10 +601,6 @@ fun ShowEventItem() {
 //
 //
 //}
-
-
-
-
 
 
 @Composable
