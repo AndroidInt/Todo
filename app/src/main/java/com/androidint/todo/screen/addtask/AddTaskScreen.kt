@@ -3,17 +3,26 @@ package com.androidint.todo.screen.addtask
 import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardElevation
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,13 +37,23 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.androidint.todo.R
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Day
 import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TimeTask
+import com.androidint.todo.ui.theme.Purple40
+import com.androidint.todo.ui.theme.PurpleGrey40
 import com.androidint.todo.utils.DataStore.Companion.categoryToColor
 import saman.zamani.persiandate.PersianDate
 
@@ -85,8 +104,9 @@ fun AddTaskScreen(
     addTask: (task: Task, category: Category) -> Unit,
 
     updateTask: (task: Task, category: Category) -> Unit,
+    successfullyDone : State<Boolean>,
+    onSuccessfullyDone: ()-> Unit
 
-//    resetState : () -> Unit
 
     ) {
 
@@ -132,12 +152,15 @@ fun AddTaskScreen(
     var description by remember {
         mutableStateOf("")
     }
-    var category by remember {
+    var category: Category? by remember {
         mutableStateOf(
-            if (categoryList.toList().isNotEmpty())
+
+            if (categoryList.toList().isNotEmpty()){
                 Category(categoryList.toList()[0].name,categoryList.toList()[0].color)
-                        else{
-                Category("Inbox", 0)
+
+            }
+            else{
+                          Category("Inbox", 0)
                         }
 
         )
@@ -161,6 +184,9 @@ fun AddTaskScreen(
             )
         }
 
+    }
+    var showDialog =  remember{
+        mutableStateOf(false)
     }
 
 
@@ -252,19 +278,22 @@ fun AddTaskScreen(
                         .fillMaxWidth()
                 ) {
                     Text(text = "Category : ", modifier = Modifier.weight(1F))
-                    Row(
-                        modifier = Modifier.weight(1F),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Canvas(modifier = Modifier) {
+                    category?.let {
+                        Row(
+                            modifier = Modifier.weight(1F),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Canvas(modifier = Modifier) {
 
-                            drawCircle(categoryToColor(category.color), radius = 4.dp.toPx())
+                                drawCircle(categoryToColor(it.color), radius = 4.dp.toPx())
 
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = "${it.name} ")
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(text = "${category.name} ")
                     }
+
 
 
                 }
@@ -300,7 +329,7 @@ fun AddTaskScreen(
                     Button(
                         modifier = Modifier.weight(0.9F),
                         onClick = {
-                            var task = Task(
+                            val task = Task(
                                 title,description,
                                 Day(
                                     calendar.setGrgDay(dayP.value)
@@ -317,13 +346,16 @@ fun AddTaskScreen(
                             )
 
                             if (!updateRequest.value) {
-                                addTask(task,category)
+
+                                category?.let { addTask(task, it) }
+
 
                             } else {
-                                updateTask(task,category)
-                            }
-                            if (conflictedCategoryState.value && conflictedDurationState.value){
 
+                                category?.let { updateTask(task, it) }
+
+                            }
+                            if (!conflictedCategoryState.value && !conflictedDurationState.value){
                                 title = ""
                                 description = ""
                                 dayP.value = calendar.grgDay
@@ -332,6 +364,7 @@ fun AddTaskScreen(
 
 
                             }
+
 
                         },
                         enabled = saveTaskState.value
@@ -421,11 +454,78 @@ fun AddTaskScreen(
                     }
                 )
             }
+            if (successfullyDone.value){
+                CustomDialog(onSuccessfullyDone)
+            }
 
         }
     }
 
 
+}
+
+@Composable
+fun CustomDialog( onDismiss : ()->Unit) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        CustomDialogUI()
+    }
+}
+
+//Layout
+@Composable
+fun CustomDialogUI(modifier: Modifier = Modifier){
+    Card(
+        //shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(10.dp),
+        // modifier = modifier.size(280.dp, 240.dp)
+        modifier = Modifier.padding(10.dp,5.dp,10.dp,10.dp),
+        
+    ) {
+        Column(
+            modifier
+//                .background(Color.White)
+        ) {
+
+            //.......................................................................
+            Image(
+                painter = painterResource(id = R.drawable.baseline_add_task_24),
+                contentDescription = null, // decorative
+                contentScale = ContentScale.Fit,
+                colorFilter  = ColorFilter.tint(
+                    color = MaterialTheme.colorScheme.onPrimary
+                ),
+                modifier = Modifier
+                    .padding(top = 35.dp)
+                    .height(70.dp)
+                    .fillMaxWidth(),
+
+                )
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Your request has been done.",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(top = 5.dp)
+                        .fillMaxWidth(),
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+            }
+          
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+                horizontalArrangement = Arrangement.End) {
+
+                
+
+            }
+        }
+    }
 }
 
 

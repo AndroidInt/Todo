@@ -72,6 +72,8 @@ import com.androidint.todo.utils.DataStore.Companion.categoryToColor
 import com.androidint.todo.utils.DataStore.Companion.colorToCategoryGroup
 import saman.zamani.persiandate.PersianDate
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,10 +94,7 @@ fun TitleInput(
     }
     val maxCharacter = 25
     val focusManager = LocalFocusManager.current
-    val focusRequester = FocusRequester()
-    LaunchedEffect(Unit){
-        focusRequester.requestFocus()
-    }
+
 
     Card(modifier = Modifier
         .padding(8.dp)
@@ -115,12 +114,10 @@ fun TitleInput(
                     }, keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ), keyboardActions = KeyboardActions(onDone = {
-//                        if (confirmToNext)
-//                            onSetTitle(title)
+
                         focusManager.clearFocus()
                     }), singleLine = true, modifier = Modifier
                         .fillMaxWidth()
-                        .focusRequester(focusRequester)
                 )
 
 
@@ -158,13 +155,8 @@ fun DescriptionInput(
     var confirmToNext by remember { mutableStateOf(true) }
     val maxCharacter = 40
     val focusManager = LocalFocusManager.current
-    val focusRequester = FocusRequester()
-    LaunchedEffect(Unit){
-        focusRequester.requestFocus()
-    }
-    Card(modifier = Modifier
-        .padding(8.dp)
-        .focusRequester(focusRequester)) {
+
+    Card(modifier = Modifier.padding(8.dp)) {
 
         Column {
 
@@ -183,8 +175,7 @@ fun DescriptionInput(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(onDone = {
-//                        if (confirmToNext)
-//                            onSetDescription(description)
+
                         focusManager.clearFocus()
 
                     }),
@@ -508,7 +499,7 @@ fun CalendarTaskSet(
 
 }
 
-
+private fun numberToDigit(number : Int) = if (number<10) "0$number" else number.toString()
 @ExperimentalFoundationApi
 @Composable
 fun ClockTaskSet(
@@ -544,7 +535,7 @@ fun ClockTaskSet(
 
     val confirmToNext by remember {
         derivedStateOf {
-            "$endHour$endMinute".toInt() - "$startHour$startMinute".toInt() >= minDuration
+            (endHour.hours+endMinute.minutes).inWholeMinutes - (startHour.hours+startMinute.minutes).inWholeMinutes >= minDuration
         }
 
     }
@@ -987,10 +978,6 @@ fun ColorPicker(
 
                 val maxCharacter = 25
                 val focusManager = LocalFocusManager.current
-                val focusRequester = FocusRequester()
-                LaunchedEffect(Unit){
-                    focusRequester.requestFocus()
-                }
 
                 OutlinedTextField(
                     value = name.value,
@@ -1009,8 +996,7 @@ fun ColorPicker(
 //                            )
                         focusManager.clearFocus()
                     }), singleLine = true, modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester),
+                        .fillMaxWidth(),
                     supportingText = {
                         Text(text = "Have just one category for each color ")
                     }

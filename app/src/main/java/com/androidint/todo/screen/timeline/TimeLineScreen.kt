@@ -1,5 +1,7 @@
 package com.androidint.todo.screen.timeline
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -111,7 +113,7 @@ fun TimeLineScreen(
                 )
             }
         }
-
+        val interactionSource = remember { MutableInteractionSource() }
         val lazyListState = rememberLazyListState()
         LazyRow(state = lazyListState, modifier = Modifier.fillMaxWidth()) {
             items(weeksOfMonth.size) { it ->

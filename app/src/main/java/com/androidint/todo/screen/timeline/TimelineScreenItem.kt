@@ -21,11 +21,16 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -33,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -51,6 +57,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -109,7 +116,7 @@ fun EventLayout(
 
     val hourHeight = 120.dp
     val calendar = PersianDate()
-    val today = Day(calendar.dayOfWeek(),calendar.grgDay,calendar.grgMonth,calendar.grgYear)
+    val today = Day(calendar.dayOfWeek(), calendar.grgDay, calendar.grgMonth, calendar.grgYear)
     val time = remember {
         mutableStateOf(
 
@@ -143,15 +150,15 @@ fun EventLayout(
                 minResolutionTime = 10
 
 
-            repeat(24){ hour ->
-                repeat(60/minResolutionTime){ minute ->
+            repeat(24) { hour ->
+                repeat(60 / minResolutionTime) { minute ->
                     Box(
                         modifier = Modifier
                             .height(hourHeight)
                             .bottomBorder(1.dp, MaterialTheme.colorScheme.onPrimary)
                             .taskData(null, false)
                     ) {
-                        BasicSidebarLabel(hour, minute*minResolutionTime)
+                        BasicSidebarLabel(hour, minute * minResolutionTime)
                     }
                 }
             }
@@ -176,30 +183,30 @@ fun EventLayout(
             // TODO("if you are in today then current time just should be showed")
             if (day.equal(today))
                 Row(
-                modifier = Modifier
-                    .taskData(null, true)
-            ) {
-                Canvas(modifier = Modifier) {
+                    modifier = Modifier
+                        .taskData(null, true)
+                ) {
+                    Canvas(modifier = Modifier) {
 
-                    drawCircle(Color.Blue, radius = 4.dp.toPx())
+                        drawCircle(Color.Blue, radius = 4.dp.toPx())
 
+                    }
+
+
+                    Box(modifier = Modifier) {
+                        Divider(
+                            Modifier
+                                .height(1.dp)
+                                .fillMaxWidth(), color = Color.Blue
+                        )
+                    }
                 }
-
-
-                Box(modifier = Modifier) {
-                    Divider(
-                        Modifier
-                            .height(1.dp)
-                            .fillMaxWidth(), color = Color.Blue
-                    )
-                }
-            }
 
 
         }
     )
     { measurables, constraints ->
-        val height = hourHeight.roundToPx() * 24 * 60/minResolutionTime
+        val height = hourHeight.roundToPx() * 24 * 60 / minResolutionTime
         val placeableWithTasks = measurables.map { measurable ->
 
             val task: Task? = (measurable.parentData as TaskDataModifier).task
@@ -254,8 +261,9 @@ fun EventLayout(
                 if (task == null) {
 
                     if (dividerExist) {
-                        Log.d("time","${time.value}")
-                        val offsetTime = ((hourHeight.toPx() / minResolutionTime.toFloat()) * time.value.toFloat() ).roundToInt()
+                        Log.d("time", "${time.value}")
+                        val offsetTime =
+                            ((hourHeight.toPx() / minResolutionTime.toFloat()) * time.value.toFloat()).roundToInt()
                         placeable.place(paddingHour + 10, offsetTime)
                     } else {
                         placeable.place(paddingHour, heightTimeBar)
@@ -265,7 +273,8 @@ fun EventLayout(
 
                 } else {
                     val taskOffsetMinutes = task.timeDuration.offsetTimeToMinutes()
-                    val taskY = (((taskOffsetMinutes.toFloat() / minResolutionTime.toFloat()))*hourHeight.toPx()).roundToInt()
+                    val taskY =
+                        (((taskOffsetMinutes.toFloat() / minResolutionTime.toFloat())) * hourHeight.toPx()).roundToInt()
                     placeable.place(taskPadding, taskY)
                 }
 
@@ -310,45 +319,68 @@ fun BasicEvent(
     category: Category
 ) {
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
+    Column {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
 //            .padding(8.dp)
-            .background(
-                MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp)
-            )
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.03F)
-                .fillMaxHeight(1F)
                 .background(
-                    //TODO("it must pass the task's color not ownerCategoryId")
-                    DataStore.categoryToColor(category.color)
+                    MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp)
                 )
-        )
+        ) {
 
-        Spacer(modifier = Modifier.fillMaxWidth(0.05F))
-
-        Column(Modifier.fillMaxWidth(0.92F)) {
-            Spacer(modifier = Modifier.height(16.dp))
-            //TODO("pass category name to Text from ViewModel which has a fun that convert Id to category's name")
-            Text(text = category.name)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = task.title)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text =
-                "${task.timeDuration.startHour}:${if (task.timeDuration.startMinute < 10) "0" + task.timeDuration.startMinute else task.timeDuration.startMinute}"
-                        + " - " + "${task.timeDuration.endHour}:${if (task.timeDuration.endMinute < 10) "0" + task.timeDuration.endMinute else task.timeDuration.endMinute}"
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.03F)
+                    .fillMaxHeight(1F)
+                    .background(
+                        //TODO("it must pass the task's color not ownerCategoryId")
+                        DataStore.categoryToColor(category.color)
+                    )
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.fillMaxWidth(0.05F))
+
+            Column(Modifier.fillMaxWidth(0.92F)) {
+                Spacer(modifier = Modifier.height(16.dp))
+                //TODO("pass category name to Text from ViewModel which has a fun that convert Id to category's name")
+                Text(text = category.name)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = task.title)
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                )
+                {
+
+                    Text(
+                        text =
+                        "${task.timeDuration.startHour}:${if (task.timeDuration.startMinute < 10) "0" + task.timeDuration.startMinute else task.timeDuration.startMinute}"
+                                + " - " + "${task.timeDuration.endHour}:${if (task.timeDuration.endMinute < 10) "0" + task.timeDuration.endMinute else task.timeDuration.endMinute}",
+                        modifier = Modifier.weight(1F)
+                    )
+
+
+                    Text(text = "Edit", modifier = Modifier
+                        .weight(1F)
+                        .clickable {
+//                            TODO("go to update task page with the information navGraph")
+
+                        }, textAlign = TextAlign.End)
+
+
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+            }
+
 
         }
 
-
     }
+
 
 }
 
@@ -631,12 +663,19 @@ fun DayComponent(
     onClick: (Int) -> Unit
 ) {
 
-    var interactionSource = remember { MutableInteractionSource() }
 
+    val interactionSource = remember{ MutableInteractionSource() }
 
 
     Card(
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = rememberRipple()
+            ) {
+                onClick(dayOfMonth)
+            },
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onPrimary
@@ -644,15 +683,11 @@ fun DayComponent(
 
 
     ) {
-        Column(
-            modifier
-                .padding(8.dp)
-                .clickable {
-                    onClick(dayOfMonth)
-                    interactionSource = interactionSource
-                },
-            horizontalAlignment = Alignment.CenterHorizontally
 
+
+        Column(
+            modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = dayOfMonth.toString())
             Box(
@@ -661,6 +696,7 @@ fun DayComponent(
             ) {
                 Text(text = dayOfWeek, modifier)
                 Text(text = "Wed", modifier = modifier.alpha(0F))
+
             }
 
         }

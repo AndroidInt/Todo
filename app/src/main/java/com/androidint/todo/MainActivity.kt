@@ -59,7 +59,9 @@ class MainActivity : ComponentActivity() {
                                 categoryList = viewModelAddTask.categoryList,
                                 updateRequest = viewModelAddTask.updateRequest,
                                 addTask = viewModelAddTask::addTask,
-                                updateTask = viewModelAddTask::updateTask
+                                updateTask = viewModelAddTask::updateTask,
+                                successfullyDone = viewModelAddTask.successfullyDone,
+                                onSuccessfullyDone = viewModelAddTask::onSuccessfullyDone
                             )
                         }else{
                             TimeLineScreen(

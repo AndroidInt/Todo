@@ -8,6 +8,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import java.time.LocalTime
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 
 /*
@@ -80,16 +83,29 @@ data class TimeTask(
 
 
     fun isConflicted(other: TimeTask): Boolean {
+        val start = (this.startHour.hours + this.startMinute.minutes).inWholeMinutes
+        val end = (this.endHour.hours + this.endMinute.minutes).inWholeMinutes
+        val secondStart = (other.startHour.hours + other.startMinute.minutes).inWholeMinutes
+        val secondEnd = (other.endHour.hours + other.endMinute.minutes).inWholeMinutes
 
-        val start = "${this.startHour}${this.startMinute}".toInt()
-        val secondStart = "${other.startHour}${other.startMinute}".toInt()
-        val end = "${this.endHour}${this.endMinute}".toInt()
-        val secondEnd = "${other.endHour}${other.endMinute}".toInt()
+
+//        val start = (numberToDigit(this.startHour)+numberToDigit(this.startMinute)).toInt()
+//        val end = (numberToDigit(this.endHour)+numberToDigit(this.endMinute)).toInt()
+//        val secondStart = (numberToDigit(other.startHour)+numberToDigit(other.startMinute)).toInt()
+//        val secondEnd =  (numberToDigit(other.endHour)+numberToDigit(other.endMinute)).toInt()
+//        val start = "${this.startHour}${this.startMinute}".toInt()
+//        val end = "${this.endHour}${this.endMinute}".toInt()
+//        val secondStart = "${other.startHour}${other.startMinute}".toInt()
+//        val secondEnd = "${other.endHour}${other.endMinute}".toInt()
 
 
-        if (secondStart or secondEnd in (start + 1) until end)
+        if (secondStart in start  until end+1)
             return true
-        if (start or end in (secondStart + 1) until secondEnd)
+        if (secondEnd in start  until end+1)
+            return true
+        if (end in secondStart until secondEnd+1)
+            return true
+        if (start in secondStart until secondEnd + 1)
             return true
 
         return false
@@ -106,7 +122,7 @@ data class TimeTask(
     }
 
 }
-
+private fun numberToDigit(number : Int) = if (number<10) "0$number" else number.toString()
 @Entity(indices = [Index(value = ["name", "color"], unique = true)])
 data class Category(
     @ColumnInfo(name = "name") var name: String = "Inbox",

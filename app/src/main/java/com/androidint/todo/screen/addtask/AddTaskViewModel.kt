@@ -1,5 +1,6 @@
 package com.androidint.todo.screen.addtask
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +41,9 @@ class AddTaskViewModel @Inject constructor(
     val categoryList: SnapshotStateList<Category> = _categoryList
     private var _updateRequest = mutableStateOf(false)
     val updateRequest: State<Boolean> = _updateRequest
+    private var _successfullyDone = mutableStateOf(false)
+    val successfullyDone: State<Boolean> = _successfullyDone
+
 
     init {
         viewModelScope.launch {
@@ -50,11 +54,14 @@ class AddTaskViewModel @Inject constructor(
         }
     }
 
-    fun resetState() {
+    private fun resetState() {
         _conflictedCategoryState.value = false
         _conflictedDurationState.value = false
         _updateRequest.value = false
 
+    }
+    fun onSuccessfullyDone(){
+        _successfullyDone.value = !_successfullyDone.value
     }
 
     fun addTask(task: Task, category: Category) {
@@ -82,6 +89,7 @@ class AddTaskViewModel @Inject constructor(
                     taskRepository.insert(task)
 
                     resetState()
+                    onSuccessfullyDone()
                 }
 
 
@@ -98,10 +106,11 @@ class AddTaskViewModel @Inject constructor(
 
 
     private suspend fun preprocessInsertTask(task: Task, category: Category) {
-        viewModelScope.launch(context = Dispatchers.IO) {
+
             _conflictedDurationState.value =
                 taskRepository.getTaskByDate(task.day.year, task.day.month, task.day.dayOfMonth)
                     .firstOrNull()?.any { item ->
+                        Log.d("conflict",task.timeDuration.toString() +" & "+item.timeDuration.toString() +" conflict : " + item.timeDuration.isConflicted(task.timeDuration) )
                         item.timeDuration.isConflicted(task.timeDuration)
                     } == true
 
@@ -110,7 +119,7 @@ class AddTaskViewModel @Inject constructor(
                     item.name == category.name && item.color != category.color
                 } == true
 
-        }
+
     }
 
     private suspend fun preprocessUpdateTask(task: Task, category: Category) {
@@ -160,6 +169,7 @@ class AddTaskViewModel @Inject constructor(
                     categoryRepository.getCategoryByName(category.name)!!.categoryId
                 taskRepository.updateTask(task)
                 resetState()
+                onSuccessfullyDone()
             }
 
 
