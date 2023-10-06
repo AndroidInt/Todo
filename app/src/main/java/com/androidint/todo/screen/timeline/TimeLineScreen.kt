@@ -1,5 +1,6 @@
 package com.androidint.todo.screen.timeline
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +64,8 @@ fun TimeLineScreen(
             "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
         )
         val weeksOfMonth = mutableListOf<String>()
+        calendar.grgMonthName
+
         repeat(
             calendar
                 .setGrgYear(year.value)
@@ -70,12 +73,10 @@ fun TimeLineScreen(
                 .setGrgDay(1)
                 .grgMonthLength
         ) {
-            weeksOfMonth.add(dayOfWeek[calendar.dayOfWeek()])
+            val weekDay = if(calendar.dayOfWeek()-2 < 0) calendar.dayOfWeek()-2+7 else calendar.dayOfWeek()-2
+            weeksOfMonth.add(dayOfWeek[weekDay])
             calendar.addDay()
         }
-
-
-
 
 
         Row(

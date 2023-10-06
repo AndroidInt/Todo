@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.datastore.preferences.protobuf.CodedOutputStream.OutOfSpaceException
 import com.androidint.todo.R
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Day
@@ -75,7 +77,20 @@ fun MutableList<MutableState<Boolean>>.next() {
         this[trueIndex + 1].value = true
 
 }
+fun MutableList<MutableState<Boolean>>.set(index:Int){
+    val trueIndex = this.filter {
+        it.value
+    }.map {
+        indexOf(it)
+    }.first()
+    this[trueIndex].value = false
+    if (index in 0 until this.size){
+        this[index].value = true
+    }else{
+        throw IndexOutOfBoundsException("Index is out of bound")
+    }
 
+}
 fun MutableList<MutableState<Boolean>>.back() {
 
     val trueIndex = this.filter {
@@ -226,7 +241,9 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Title :", modifier = Modifier.weight(1F))
+                    Text(text = "Title :", modifier = Modifier.weight(1F).clickable {
+                        stack.set(0)
+                    })
                     Text(text = title, modifier = Modifier.weight(1F))
 
                 }
@@ -235,7 +252,9 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Description :", modifier = Modifier.weight(1F))
+                    Text(text = "Description :", modifier = Modifier.weight(1F).clickable {
+                        stack.set(1)
+                    })
                     Text(text = description, modifier = Modifier.weight(1F))
 
                 }
@@ -244,7 +263,9 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Date : ", modifier = Modifier.weight(1F))
+                    Text(text = "Date : ", modifier = Modifier.weight(1F).clickable {
+                        stack.set(2)
+                    })
                     Text(
                         text = "${yearP.value} / ${
                             calendar.getGrgMonthName(monthP.value).take(3)
@@ -257,7 +278,9 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Time : ", modifier = Modifier.weight(1F))
+                    Text(text = "Time : ", modifier = Modifier.weight(1F).clickable {
+                        stack.set(3)
+                    })
                     Row(modifier = Modifier.weight(1F)) {
                         Text(
                             text = "${if (timeTask.startHour < 10) "0${timeTask.startHour}" else "${timeTask.startHour}"} : ${if (timeTask.startMinute < 10) "0${timeTask.startMinute}" else "${timeTask.startMinute}"}",
@@ -277,7 +300,9 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Category : ", modifier = Modifier.weight(1F))
+                    Text(text = "Category : ", modifier = Modifier.weight(1F).clickable {
+                        stack.set(4)
+                    })
                     category?.let {
                         Row(
                             modifier = Modifier.weight(1F),

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -114,7 +115,7 @@ fun EventLayout(
     }
 ) {
 
-    val hourHeight = 120.dp
+    val hourHeight = 180.dp
     val calendar = PersianDate()
     val today = Day(calendar.dayOfWeek(), calendar.grgDay, calendar.grgMonth, calendar.grgYear)
     val time = remember {
@@ -179,8 +180,6 @@ fun EventLayout(
 
                 }
             }
-            //current time line
-            // TODO("if you are in today then current time just should be showed")
             if (day.equal(today))
                 Row(
                     modifier = Modifier
@@ -322,7 +321,7 @@ fun BasicEvent(
     Column {
         Row(
             modifier = modifier
-                .fillMaxWidth()
+                .fillMaxSize()
 //            .padding(8.dp)
                 .background(
                     MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp)
@@ -348,29 +347,38 @@ fun BasicEvent(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = task.title)
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                )
-                {
-
-                    Text(
-                        text =
-                        "${task.timeDuration.startHour}:${if (task.timeDuration.startMinute < 10) "0" + task.timeDuration.startMinute else task.timeDuration.startMinute}"
-                                + " - " + "${task.timeDuration.endHour}:${if (task.timeDuration.endMinute < 10) "0" + task.timeDuration.endMinute else task.timeDuration.endMinute}",
-                        modifier = Modifier.weight(1F)
+                task.description?.let { Text(text = it) }
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier.fillMaxHeight()
+                        .padding(8.dp)
+                    ,
+                    verticalArrangement = Arrangement.Bottom) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     )
+                    {
+
+                        Text(
+                            text =
+                            "${task.timeDuration.startHour}:${if (task.timeDuration.startMinute < 10) "0" + task.timeDuration.startMinute else task.timeDuration.startMinute}"
+                                    + " - " + "${task.timeDuration.endHour}:${if (task.timeDuration.endMinute < 10) "0" + task.timeDuration.endMinute else task.timeDuration.endMinute}",
+                            modifier = Modifier.weight(1F)
+                        )
 
 
-                    Text(text = "Edit", modifier = Modifier
-                        .weight(1F)
-                        .clickable {
+                        Text(text = "Edit", modifier = Modifier
+                            .weight(1F)
+                            .clickable {
 //                            TODO("go to update task page with the information navGraph")
 
-                        }, textAlign = TextAlign.End)
+                            }, textAlign = TextAlign.End)
 
 
+                    }
                 }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
