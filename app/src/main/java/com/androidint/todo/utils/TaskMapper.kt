@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 
 class TaskMapper() {
-    companion object{
+    companion object {
         fun mapToTaskList(categoryWithTasksList: List<CategoryWithTasks>): MutableList<TaskWithCategoryName> {
             val tasksWithCategoryNameList: MutableList<TaskWithCategoryName> = ArrayList()
             for (item in categoryWithTasksList) {
@@ -31,8 +31,27 @@ class TaskMapper() {
             }
             return tasksWithCategoryNameList
         }
-        fun generateData(task: Task){
 
+        fun generateData(categoryWithTasksList: List<CategoryWithTasks>): MutableList<TaskWithCategoryName> {
+            val tasksWithCategoryNameList: MutableList<TaskWithCategoryName> = ArrayList()
+            categoryWithTasksList.map { category ->
+                category.tasks.forEach { task->
+                    tasksWithCategoryNameList.add(
+                        TaskWithCategoryName(
+                            task.title,
+                            task.description,
+                            task.day,
+                            task.ownerCategoryId,
+                            task.timeDuration,
+                            task.priority,
+                            task.done,
+                            category.category.name
+                        )
+                    )
+                }
+
+            }
+            return tasksWithCategoryNameList
         }
     }
 

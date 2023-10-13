@@ -12,16 +12,16 @@ import androidx.room.Relation
 
 
 @Entity
-data class Task(
-    val title: String,
-    val description: String?,
+ open class Task(
+    open val title: String,
+    open val description: String?,
     @Embedded
-    val day: Day,
-    val ownerCategoryId: Int,
+    open val day: Day,
+    open val ownerCategoryId: Int,
     @Embedded
-    val timeDuration: TimeTask,
-    val priority: Int = 1,
-    var done: Boolean = false
+    open val timeDuration: TimeTask,
+    open val priority: Int = 1,
+    open var done: Boolean = false
 
 ) {
     @PrimaryKey(autoGenerate = true)

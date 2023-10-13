@@ -35,7 +35,7 @@ interface TaskDao {
     fun getCategoriesWithTasks(): List<CategoryWithTasks>
 
     @Update
-    suspend fun updateTask(task: Task)
+    suspend fun updateTask(task: Task): Int
 
 
 }

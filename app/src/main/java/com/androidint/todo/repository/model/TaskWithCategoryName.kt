@@ -12,5 +12,6 @@ data class TaskWithCategoryName(
     val timeDuration: TimeTask,
     val priority: Int = 1,
     var done: Boolean = false,
-    val name: String = "Inbox"
+    var name: String = "Inbox"
+
 )
