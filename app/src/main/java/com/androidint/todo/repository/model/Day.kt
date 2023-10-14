@@ -1,12 +1,15 @@
 package com.androidint.todo.repository.model
 
+import android.os.Parcelable
 import androidx.compose.ui.graphics.vector.RootGroupName
+import androidx.navigation.NavGraph
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import kotlinx.parcelize.Parcelize
 import java.time.LocalTime
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.hours
@@ -16,10 +19,10 @@ import kotlin.time.Duration.Companion.minutes
 /*
     one-to-many relationship between Task(child entity) and Category (parent entity)
 */
-
-
+@Parcelize
 @Entity
 data class Task(
+
     val title: String,
     val description: String?,
     @Embedded(prefix = "day_")
@@ -28,11 +31,11 @@ data class Task(
     @Embedded
     val timeDuration: TimeTask,
     val priority: Int = 1,
-    var done: Boolean = false
-) {
+    var done: Boolean = false,
     @PrimaryKey(autoGenerate = true)
-    var taskId: Int = 0
-}
+    var taskId: Int? = null
+) :Parcelable
+
 
 enum class DayOfWeek() {
     Monday,
@@ -54,12 +57,13 @@ enum class DayOfWeek() {
     }
 }
 
+@Parcelize
 class Day(
     var dayOfWeek: Int,
     val dayOfMonth: Int,
     val month: Int,
     val year: Int
-) {
+) :Parcelable{
     fun equal(other: Day): Boolean {
         return other.dayOfWeek == this.dayOfWeek &&
                 other.dayOfMonth == this.dayOfMonth &&
@@ -70,13 +74,13 @@ class Day(
 
 }
 
-
+@Parcelize
 data class TimeTask(
     var startHour: Int = 0,
     var startMinute: Int = 0,
     var endHour: Int = 0,
     var endMinute: Int = 0
-) : Comparable<TimeTask> {
+) : Comparable<TimeTask>,Parcelable {
     override fun compareTo(other: TimeTask): Int {
         return "${other.startHour.toString()}${other.startMinute.toString()}".toInt()
     }
@@ -122,15 +126,15 @@ data class TimeTask(
     }
 
 }
-private fun numberToDigit(number : Int) = if (number<10) "0$number" else number.toString()
+@Parcelize
 @Entity(indices = [Index(value = ["name", "color"], unique = true)])
 data class Category(
+
     @ColumnInfo(name = "name") var name: String = "Inbox",
     @ColumnInfo(name = "color") val color: Int = 0,
-) {
     @PrimaryKey(autoGenerate = true)
-    var categoryId: Int = 0
-}
+    var categoryId: Int? = null,
+):Parcelable
 
 data class CategoryWithTasks(
     @Embedded val category: Category,

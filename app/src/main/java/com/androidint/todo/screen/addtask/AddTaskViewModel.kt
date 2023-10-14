@@ -85,7 +85,7 @@ class AddTaskViewModel @Inject constructor(
                         insertCategory(category)
 
                     task.ownerCategoryId =
-                        categoryRepository.getCategoryByName(category.name)!!.categoryId
+                        categoryRepository.getCategoryByName(category.name)!!.categoryId!!
                     taskRepository.insert(task)
 
                     resetState()
@@ -166,7 +166,7 @@ class AddTaskViewModel @Inject constructor(
                     insertCategory(category)
 
                 task.ownerCategoryId =
-                    categoryRepository.getCategoryByName(category.name)!!.categoryId
+                    categoryRepository.getCategoryByName(category.name)!!.categoryId!!
                 taskRepository.updateTask(task)
                 resetState()
                 onSuccessfullyDone()
