@@ -33,7 +33,7 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.getCategoriesWithTasks()
     }
 
-    suspend fun updateTask(task : Task){
+    suspend fun updateTask(task : Task): Int{
         return taskDao.updateTask(task)
     }
 
