@@ -92,17 +92,6 @@ data class TimeTask(
         val secondStart = (other.startHour.hours + other.startMinute.minutes).inWholeMinutes
         val secondEnd = (other.endHour.hours + other.endMinute.minutes).inWholeMinutes
 
-
-//        val start = (numberToDigit(this.startHour)+numberToDigit(this.startMinute)).toInt()
-//        val end = (numberToDigit(this.endHour)+numberToDigit(this.endMinute)).toInt()
-//        val secondStart = (numberToDigit(other.startHour)+numberToDigit(other.startMinute)).toInt()
-//        val secondEnd =  (numberToDigit(other.endHour)+numberToDigit(other.endMinute)).toInt()
-//        val start = "${this.startHour}${this.startMinute}".toInt()
-//        val end = "${this.endHour}${this.endMinute}".toInt()
-//        val secondStart = "${other.startHour}${other.startMinute}".toInt()
-//        val secondEnd = "${other.endHour}${other.endMinute}".toInt()
-
-
         if (secondStart in start  until end+1)
             return true
         if (secondEnd in start  until end+1)
@@ -138,11 +127,9 @@ data class Category(
 
 data class CategoryWithTasks(
     @Embedded val category: Category,
-
     @Relation(
         parentColumn = "categoryId", //name of Id field that belongs to Category
         entityColumn = "ownerCategoryId" //name of Id field that was created for relationship
     )
     val tasks: List<Task>
-
 )

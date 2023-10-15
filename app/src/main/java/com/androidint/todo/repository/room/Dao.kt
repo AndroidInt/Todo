@@ -36,7 +36,7 @@ interface TaskDao {
     fun getCategoriesWithTasks(): Flow<List<CategoryWithTasks>>
 
     @Update
-    suspend fun updateTask(task: Task)
+    suspend fun updateTask(task: Task): Int
 
     @Query("SELECT * FROM TASK WHERE day_dayOfMonth ==:day AND day_month==:month AND day_year==:year")
     fun getTaskByDate(year: Int, month: Int, day: Int): Flow<List<Task>>

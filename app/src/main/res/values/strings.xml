@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">Todo</string>
+    <string name="app_name">Todo</string><string name="nothing_to_show_please_make_your_first_task_with">x</string>
+    <string name="done">Done</string>
+    <string name="delete">Delete</string>
+    <string name="are_you_sure_you_want_to_delete_this">Are you sure you want to delete this?</string>
+    <string name="this_action_cannot_be_undone">This action cannot be undone</string>
+    <string name="delete_it">Delete it</string>
+    <string name="cancel">Cancel</string>
 </resources>
