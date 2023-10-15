@@ -114,7 +114,6 @@ fun TimeLineScreen(
                 )
             }
         }
-        val interactionSource = remember { MutableInteractionSource() }
         val lazyListState = rememberLazyListState()
         LazyRow(state = lazyListState, modifier = Modifier.fillMaxWidth()) {
             items(weeksOfMonth.size) { it ->

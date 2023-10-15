@@ -13,6 +13,7 @@ android {
     namespace = "com.androidint.todo"
     compileSdk = 33
 
+
     defaultConfig {
         applicationId = "com.androidint.todo"
         minSdk = 24
@@ -23,6 +24,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+        kapt {
+            arguments {
+                arg("room.schemaLocation", "$projectDir/schemas")
+            }
         }
     }
 

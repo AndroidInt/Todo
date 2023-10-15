@@ -200,10 +200,6 @@ fun AddTaskScreen(
         }
 
     }
-    var showDialog =  remember{
-        mutableStateOf(false)
-    }
-
 
     val yearP = remember {
         mutableStateOf(
