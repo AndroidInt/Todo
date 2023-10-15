@@ -30,7 +30,7 @@ fun MainNavGraph (navHostController : NavHostController) {
 
         composable(route = Screens.add_task){
             val viewModelAddTask = hiltViewModel<AddTaskViewModel>()
-                    AddTaskScreen(
+            AddTaskScreen(
             conflictedDurationState = viewModelAddTask.conflictedDurationState,
             conflictedCategoryState = viewModelAddTask.conflictedCategoryState,
             categoryList = viewModelAddTask.categoryList,
@@ -45,7 +45,7 @@ fun MainNavGraph (navHostController : NavHostController) {
 
         composable(route = Screens.timeline){
             val viewModelTimeLineTask = hiltViewModel<TimeLineViewModel>()
-                    TimeLineScreen(
+            TimeLineScreen(
             month = viewModelTimeLineTask.month,
             previousMonth = viewModelTimeLineTask::previousMonth,
             nextMonth = viewModelTimeLineTask::nextMonth,
