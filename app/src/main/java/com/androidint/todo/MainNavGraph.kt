@@ -1,8 +1,6 @@
 package com.androidint.todo
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -21,10 +19,13 @@ fun MainNavGraph (navHostController : NavHostController) {
     NavHost(navController = navHostController, startDestination = Screens.main_page ){
 
         composable(route = Screens.main_page){
-            val viewModel = hiltViewModel<MainPageViewModel>()
+            val mainPageViewModel = hiltViewModel<MainPageViewModel>()
             MainPageCompose(
                 navHostController,
-                viewModel
+                mainPageViewModel.tasks,
+                mainPageViewModel.tasksWithCategory,
+                mainPageViewModel::deleteTask,
+                mainPageViewModel::doneCurrentTask
             )
         }
 

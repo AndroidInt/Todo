@@ -1,6 +1,8 @@
 package com.androidint.todo.screen.mainPage
 
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
@@ -15,6 +17,7 @@ import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TimeTask
 import com.androidint.todo.repository.room.TodoDatabase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
@@ -31,6 +34,23 @@ import javax.inject.Named
 class MainPageViewModel @Inject constructor(private val repository: TaskRepositoryImpl) :
     ViewModel() {
 
+
+
+
+    private var _tasksWithCategory = mutableStateListOf<CategoryWithTasks>()
+    val tasksWithCategory : SnapshotStateList<CategoryWithTasks> = _tasksWithCategory
+    private var _tasks = mutableStateListOf<Task>()
+    val tasks : SnapshotStateList<Task> = _tasks
+    init {
+        viewModelScope.launch(){
+            repository.getCategoriesWithTasks().collect {
+                _tasksWithCategory.addAll(it)
+            }
+            repository.getAll().collect{
+                _tasks.addAll(it)
+            }
+        }
+    }
     fun getTasksWithCategory(): List<CategoryWithTasks>? {
         return repository.getCategoriesWithTasks().flowOn(Dispatchers.IO)
             .asLiveData(viewModelScope.coroutineContext).value
@@ -42,15 +62,17 @@ class MainPageViewModel @Inject constructor(private val repository: TaskReposito
             .asLiveData(viewModelScope.coroutineContext).value
     }
 
-    fun deleteTask(task: Task){
-        viewModelScope.launch(Dispatchers.IO) {
+    fun deleteTask(task: Task,scope: CoroutineScope){
+        scope.launch {
             repository.delete(task = task)
         }
+
     }
-    fun doneCurrentTask(task: Task){
-        viewModelScope.launch(Dispatchers.IO) {
+    fun doneCurrentTask(task: Task,scope: CoroutineScope){
+        scope.launch {
             repository.updateTask(task)
         }
+
     }
 
 }

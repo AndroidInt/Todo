@@ -25,10 +25,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,14 +64,19 @@ import javax.inject.Inject
 @Composable
 fun MainPageCompose(
     navHostController: NavHostController,
-    viewModel: MainPageViewModel
+    tasks: SnapshotStateList<Task>,
+    tasksWithCategory: SnapshotStateList<CategoryWithTasks>,
+    deleteTask: (task: Task,scope : CoroutineScope) -> Unit,
+    doneCurrentTask: (task: Task,scope : CoroutineScope) -> Unit,
+
 ) {
+
     val topBarClickListener: TopBarClickListener
     val sdf = SimpleDateFormat("EEEE")
     val d = Date()
     val current_day: String = sdf.format(d)
-    val categoryWithTasks = viewModel.getTasksWithCategory()
-    val tasks = viewModel.getAllTasks()
+//    val categoryWithTasks = viewModel.getTasksWithCategory()
+//    val tasks = viewModel.getAllTasks()
 
     Column(
         Modifier.fillMaxSize(),
@@ -76,17 +84,18 @@ fun MainPageCompose(
     ) {
         TopAppBarCompose(title = current_day)
 
-        categoryWithTasks?.let {
+        tasksWithCategory.let {
             tasks?.let {
 
                 MainCard(
-                    categoryWithTasks
+                    tasksWithCategory
                 )
 
-                ProjectCard(categoryWithTasks)
+                ProjectCard(tasksWithCategory)
                 tasksList(
                     tasks,
-                    viewModel
+                    deleteTask,
+                    doneCurrentTask
                 )
 
             }
@@ -94,14 +103,17 @@ fun MainPageCompose(
             nullData()
         }
     }
+
 }
 
 
 @Composable
 fun tasksList(
     tasks: List<Task>,
-    viewModel: MainPageViewModel
+    deleteTask: (task: Task,scope : CoroutineScope) -> Unit,
+    doneCurrentTask: (task: Task,scope : CoroutineScope) -> Unit,
 ) {
+    val scope = CoroutineScope(Dispatchers.IO)
     val testList = mutableListOf<String>()
     var showDialog by remember { mutableStateOf(false) }
 
@@ -130,7 +142,7 @@ fun tasksList(
                     Row(Modifier.padding(10.dp)) {
 
                         Text(
-                            text = tasks.get(item).title,
+                            text = tasks[item].title,
                             modifier = Modifier.padding(15.dp),
                             color = Color.White
                         )
@@ -145,7 +157,7 @@ fun tasksList(
                                     .align(Alignment.CenterEnd),
                                 colors = ButtonDefaults.buttonColors(Color.Green),
                                 onClick = {
-                                    viewModel.doneCurrentTask(tasks.get(item))
+                                    doneCurrentTask(tasks[item],scope)
                                 }) {
                                 Text(text = stringResource(R.string.done))
                             }
@@ -154,7 +166,7 @@ fun tasksList(
                                 colors = ButtonDefaults.buttonColors(Color.Red),
                                 onClick = {
                                     showDialog = showDialog.not()
-                                    viewModel.deleteTask(tasks.get(item))
+                                    deleteTask(tasks[item],scope)
                                 }) {
                                 Text(text = stringResource(R.string.delete))
                             }
@@ -165,7 +177,7 @@ fun tasksList(
                                     text = { Text(stringResource(R.string.this_action_cannot_be_undone)) },
                                     confirmButton = {
                                         TextButton(onClick = {
-                                            viewModel.deleteTask(tasks.get(item))
+                                            deleteTask(tasks[item],scope)
 
                                         }) {
                                             Text(stringResource(R.string.delete_it).uppercase())
@@ -205,8 +217,6 @@ fun nullData() {
         )
     }
 }
-
-
 
 
 //@Preview
