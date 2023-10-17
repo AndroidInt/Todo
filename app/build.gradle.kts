@@ -20,6 +20,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -143,4 +144,10 @@ dependencies {
 
     implementation("com.github.samanzamani:PersianDate:1.7.1")
 //
+    val compose_version = "1.4.3"
+    // Test rules and transitive dependencies:
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$compose_version")
+// Needed for createAndroidComposeRule, but not createComposeRule:
+    debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
+
 }
