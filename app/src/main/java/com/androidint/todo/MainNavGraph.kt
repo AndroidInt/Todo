@@ -12,13 +12,17 @@ import com.androidint.todo.screen.mainPage.MainPageViewModel
 import com.androidint.todo.screen.timeline.TimeLineScreen
 import com.androidint.todo.screen.timeline.TimeLineViewModel
 import com.androidint.todo.utils.Screens
+import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun MainNavGraph (navHostController : NavHostController) {
+fun MainNavGraph(
+    navHostController: NavHostController,
+    showSnackBar: (message: String, scope: CoroutineScope) -> Unit
+) {
 
-    NavHost(navController = navHostController, startDestination = Screens.main_page ){
+    NavHost(navController = navHostController, startDestination = Screens.main_page) {
 
-        composable(route = Screens.main_page){
+        composable(route = Screens.main_page) {
             val mainPageViewModel = hiltViewModel<MainPageViewModel>()
             MainPageCompose(
                 navHostController,
@@ -29,35 +33,36 @@ fun MainNavGraph (navHostController : NavHostController) {
             )
         }
 
-        composable(route = Screens.add_task){
+        composable(route = Screens.add_task) {
             val viewModelAddTask = hiltViewModel<AddTaskViewModel>()
             AddTaskScreen(
-            conflictedDurationState = viewModelAddTask.conflictedDurationState,
-            conflictedCategoryState = viewModelAddTask.conflictedCategoryState,
-            categoryList = viewModelAddTask.categoryList,
-            updateRequest = viewModelAddTask.updateRequest,
-            addTask = viewModelAddTask::addTask,
-            updateTask = viewModelAddTask::updateTask,
-            successfullyDone = viewModelAddTask.successfullyDone,
-            onSuccessfullyDone = viewModelAddTask::onSuccessfullyDone
-        )
+                conflictedDurationState = viewModelAddTask.conflictedDurationState,
+                conflictedCategoryState = viewModelAddTask.conflictedCategoryState,
+                categoryList = viewModelAddTask.categoryList,
+                updateRequest = viewModelAddTask.updateRequest,
+                addTask = viewModelAddTask::addTask,
+                updateTask = viewModelAddTask::updateTask,
+                successfullyDone = viewModelAddTask.successfullyDone,
+                onSuccessfullyDone = viewModelAddTask::onSuccessfullyDone,
+                showSnackbar = showSnackBar
+            )
 
         }
 
-        composable(route = Screens.timeline){
+        composable(route = Screens.timeline) {
             val viewModelTimeLineTask = hiltViewModel<TimeLineViewModel>()
             TimeLineScreen(
-            month = viewModelTimeLineTask.month,
-            previousMonth = viewModelTimeLineTask::previousMonth,
-            nextMonth = viewModelTimeLineTask::nextMonth,
-            year = viewModelTimeLineTask.year,
-            day = viewModelTimeLineTask.day,
-            setDay = viewModelTimeLineTask::setDay,
-            monthName = viewModelTimeLineTask.monthName,
-            tasks = viewModelTimeLineTask.tasks,
-            categories = viewModelTimeLineTask.categories
+                month = viewModelTimeLineTask.month,
+                previousMonth = viewModelTimeLineTask::previousMonth,
+                nextMonth = viewModelTimeLineTask::nextMonth,
+                year = viewModelTimeLineTask.year,
+                day = viewModelTimeLineTask.day,
+                setDay = viewModelTimeLineTask::setDay,
+                monthName = viewModelTimeLineTask.monthName,
+                tasks = viewModelTimeLineTask.tasks,
+                categories = viewModelTimeLineTask.categories
 
-        )
+            )
 
         }
 

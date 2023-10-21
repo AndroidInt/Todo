@@ -58,6 +58,7 @@ class AddTaskViewModel @Inject constructor(
         _conflictedCategoryState.value = false
         _conflictedDurationState.value = false
         _updateRequest.value = false
+//        _successfullyDone.value = false
 
     }
     fun onSuccessfullyDone(){

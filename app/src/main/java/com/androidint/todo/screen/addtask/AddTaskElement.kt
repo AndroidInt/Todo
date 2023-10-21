@@ -82,16 +82,16 @@ import kotlin.time.Duration.Companion.minutes
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TitleInput(
-    initTitle:String,
+    initTitle: String,
     onSetTitle: (String) -> Unit,
 ) {
 
 
     var title by remember { mutableStateOf(initTitle) }
     var confirmToNext by remember {
-        if (initTitle.length > 4){
+        if (initTitle.length > 4) {
             mutableStateOf(true)
-        }else{
+        } else {
             mutableStateOf(false)
         }
     }
@@ -99,9 +99,11 @@ fun TitleInput(
     val focusManager = LocalFocusManager.current
 
 
-    Card(modifier = Modifier
-        .padding(8.dp)
-        .imePadding()) {
+    Card(
+        modifier = Modifier
+            .padding(8.dp)
+            .imePadding()
+    ) {
 
         Column() {
 
@@ -147,7 +149,7 @@ fun TitleInput(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DescriptionInput(
-    initDescription:String,
+    initDescription: String,
     onSetDescription: (String) -> Unit,
     onBack: () -> Unit,
 
@@ -221,9 +223,9 @@ fun DescriptionInput(
 @Composable
 fun CalendarTaskSet(
     modifier: Modifier = Modifier,
-    initYear:Int,
-    initMonth:Int,
-    initDay:Int,
+    initYear: Int,
+    initMonth: Int,
+    initDay: Int,
     startDayOfWeek: DayOfWeek = DayOfWeek.Monday,
     onSelectedDay: (year: Int, month: Int, day: Int) -> Unit,
     onBack: () -> Unit,
@@ -274,10 +276,11 @@ fun CalendarTaskSet(
         daysList.add(it + 1)
     }
 
-    Card(modifier = modifier
-        .padding(8.dp)
-        .wrapContentHeight(unbounded = true)
-        ) {
+    Card(
+        modifier = modifier
+            .padding(8.dp)
+            .wrapContentHeight(unbounded = true)
+    ) {
         Column(verticalArrangement = Arrangement.Top) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -351,9 +354,6 @@ fun CalendarTaskSet(
                             }
 
 
-
-
-
                         }
                     }
 
@@ -411,8 +411,7 @@ fun CalendarTaskSet(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onBackground
                     ),
-                    border = BorderStroke(2.dp,MaterialTheme.colorScheme.onBackground)
-                    ,
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
                     onClick = {
                         year = calendar.grgYear
                         month = calendar.grgMonth
@@ -430,7 +429,7 @@ fun CalendarTaskSet(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onBackground
                     ),
-                    border = BorderStroke(2.dp,MaterialTheme.colorScheme.onBackground),
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
                     onClick = {
                         val cal = PersianDate()
                             .setGrgMonth(month)
@@ -455,7 +454,7 @@ fun CalendarTaskSet(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onBackground
                     ),
-                    border = BorderStroke(2.dp,MaterialTheme.colorScheme.onBackground),
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
                     onClick = {
                         val cal = PersianDate()
                             .setGrgMonth(month)
@@ -502,7 +501,8 @@ fun CalendarTaskSet(
 
 }
 
-private fun numberToDigit(number : Int) = if (number<10) "0$number" else number.toString()
+private fun numberToDigit(number: Int) = if (number < 10) "0$number" else number.toString()
+
 @ExperimentalFoundationApi
 @Composable
 fun ClockTaskSet(
@@ -538,7 +538,7 @@ fun ClockTaskSet(
 
     val confirmToNext by remember {
         derivedStateOf {
-            (endHour.hours+endMinute.minutes).inWholeMinutes - (startHour.hours+startMinute.minutes).inWholeMinutes >= minDuration
+            (endHour.hours + endMinute.minutes).inWholeMinutes - (startHour.hours + startMinute.minutes).inWholeMinutes >= minDuration
         }
 
     }
@@ -563,15 +563,14 @@ fun ClockTaskSet(
 
                 ) {
                     Text(text = "From")
-                    ClockComponent(startHour,startMinute) { hour, minute ->
+                    ClockComponent(startHour, startMinute) { hour, minute ->
                         startHour = hour
                         startMinute = minute
 
 
-
                     }
                     Text(text = "to")
-                    ClockComponent(endHour,endMinute) { hour, minute ->
+                    ClockComponent(endHour, endMinute) { hour, minute ->
                         endHour = hour
                         endMinute = minute
                     }
@@ -593,8 +592,8 @@ fun ClockTaskSet(
             Button(
                 modifier = Modifier.weight(0.9F),
                 onClick = {
-                    onSetDuration(startHour,startMinute,endHour,endMinute)
-                          },
+                    onSetDuration(startHour, startMinute, endHour, endMinute)
+                },
                 enabled = confirmToNext
             ) {
                 Text(text = "Next")
@@ -609,7 +608,7 @@ fun ClockTaskSet(
 
 
 @Composable
-fun ClockComponent(initHour: Int,initMinute:Int,onSetClock: (hour: Int, minute: Int) -> Unit) {
+fun ClockComponent(initHour: Int, initMinute: Int, onSetClock: (hour: Int, minute: Int) -> Unit) {
 
 
     var hour by remember {
@@ -898,8 +897,7 @@ fun ColorCircle(
             .clickable {
                 colorState.value = color
             }
-            .clearAndSetSemantics { contentDescription = "choose $color" }
-        ,
+            .clearAndSetSemantics { contentDescription = "choose $color" },
         contentAlignment = Alignment.Center
     ) {
         Canvas(
@@ -925,27 +923,33 @@ fun ColorPicker(
     onBack: () -> Unit,
     onSetCategory: (category: Category) -> Unit
 ) {
-    val confirmToNext by remember{ mutableStateOf(true)}
+
     val colorState: MutableState<Color> = remember { mutableStateOf(Color.Yellow) }
     val categoryName by remember {
         derivedStateOf {
-            var name  = ""
+            var name = ""
             categories.forEach {
                 if (categoryToColor(it.color) == colorState.value)
-                    name =  it.name
+                    name = it.name
             }
 
-            if (!categories.any { categoryToColor( it.color) == colorState.value})
-                  name =   ""
+            if (!categories.any { categoryToColor(it.color) == colorState.value })
+                name = ""
             mutableStateOf(name)
         }
     }
+
+
     val name by remember {
         derivedStateOf {
             mutableStateOf(categoryName.value)
         }
     }
-
+    val confirmToNext = remember {
+        derivedStateOf {
+            name.value.length > 2
+        }
+    }
 
     Card(
         modifier = modifier
@@ -970,8 +974,6 @@ fun ColorPicker(
                     ColorCircle(
                         modifier = Modifier.weight(1F), color = color, colorState = colorState
                     )
-
-
             }
 
 
@@ -988,7 +990,13 @@ fun ColorPicker(
                     value = name.value,
                     placeholder = { Text(text = "write category's name") },
                     label = { Text(text = "Category") },
-                    onValueChange = {if (it.length <= maxCharacter) name.value = it},
+                    onValueChange = {
+                        if (it.length <= maxCharacter) {
+                            name.value = it
+                        }
+
+
+                    },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ), keyboardActions = KeyboardActions(onDone = {
@@ -1001,8 +1009,9 @@ fun ColorPicker(
 //                            )
                         focusManager.clearFocus()
                     }), singleLine = true, modifier = Modifier
-                        .fillMaxWidth().semantics {
-                                                  contentDescription = "input category name"
+                        .fillMaxWidth()
+                        .semantics {
+                            contentDescription = "input category name"
                         },
                     supportingText = {
                         Text(text = "Have just one category for each color ")
@@ -1035,7 +1044,7 @@ fun ColorPicker(
                                 )
                             )
                         },
-                        enabled = confirmToNext
+                        enabled = confirmToNext.value
                     ) {
                         Text(text = "Next")
                     }

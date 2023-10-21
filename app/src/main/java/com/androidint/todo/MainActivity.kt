@@ -10,6 +10,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +22,8 @@ import androidx.navigation.compose.rememberNavController
 import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.Screens
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -30,12 +34,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navGraph = rememberNavController()
             val fabVisible = remember { mutableStateOf(true) }
-
+            val snackbarHostState = remember { SnackbarHostState() }
             fabVisible.value = true
+            fun showSnackBar(message : String, scope: CoroutineScope){
+                scope.launch {
+                    snackbarHostState.showSnackbar(message = message)
+                }
+            }
             TodoTheme {
 
                 // A surface container using the 'background' color from the theme
                 Scaffold(
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackbarHostState)
+                    },
+
 //                    modifier = Modifier.fillMaxSize(),
 //                    color = MaterialTheme.colorScheme.background
 //                    ,
@@ -57,12 +70,13 @@ class MainActivity : ComponentActivity() {
 
                             }
                         )
-                        MainNavGraph(navHostController = navGraph)
+                        MainNavGraph(navHostController = navGraph, showSnackBar = ::showSnackBar)
                     }
                 )
             }
 
         }
+
     }
 }
 

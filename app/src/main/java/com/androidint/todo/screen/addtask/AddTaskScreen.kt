@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -57,6 +58,7 @@ import com.androidint.todo.repository.model.TimeTask
 import com.androidint.todo.ui.theme.Purple40
 import com.androidint.todo.ui.theme.PurpleGrey40
 import com.androidint.todo.utils.DataStore.Companion.categoryToColor
+import kotlinx.coroutines.CoroutineScope
 import saman.zamani.persiandate.PersianDate
 
 /*
@@ -120,11 +122,12 @@ fun AddTaskScreen(
 
     updateTask: (task: Task, category: Category) -> Unit,
     successfullyDone : State<Boolean>,
-    onSuccessfullyDone: ()-> Unit
+    onSuccessfullyDone: ()-> Unit,
+    showSnackbar : (message:String, scope: CoroutineScope)-> Unit
 
 
     ) {
-
+        val scope = rememberCoroutineScope()
 
     // state values
 
@@ -237,9 +240,11 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Title :", modifier = Modifier.weight(1F).clickable {
-                        stack.set(0)
-                    })
+                    Text(text = "Title :", modifier = Modifier
+                        .weight(1F)
+                        .clickable {
+                            stack.set(0)
+                        })
                     Text(text = title, modifier = Modifier.weight(1F))
 
                 }
@@ -248,9 +253,11 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Description :", modifier = Modifier.weight(1F).clickable {
-                        stack.set(1)
-                    })
+                    Text(text = "Description :", modifier = Modifier
+                        .weight(1F)
+                        .clickable {
+                            stack.set(1)
+                        })
                     Text(text = description, modifier = Modifier.weight(1F))
 
                 }
@@ -259,9 +266,11 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Date : ", modifier = Modifier.weight(1F).clickable {
-                        stack.set(2)
-                    })
+                    Text(text = "Date : ", modifier = Modifier
+                        .weight(1F)
+                        .clickable {
+                            stack.set(2)
+                        })
                     Text(
                         text = "${yearP.value} / ${
                             calendar.getGrgMonthName(monthP.value).take(3)
@@ -274,9 +283,11 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Time : ", modifier = Modifier.weight(1F).clickable {
-                        stack.set(3)
-                    })
+                    Text(text = "Time : ", modifier = Modifier
+                        .weight(1F)
+                        .clickable {
+                            stack.set(3)
+                        })
                     Row(modifier = Modifier.weight(1F)) {
                         Text(
                             text = "${if (timeTask.startHour < 10) "0${timeTask.startHour}" else "${timeTask.startHour}"} : ${if (timeTask.startMinute < 10) "0${timeTask.startMinute}" else "${timeTask.startMinute}"}",
@@ -296,9 +307,11 @@ fun AddTaskScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Category : ", modifier = Modifier.weight(1F).clickable {
-                        stack.set(4)
-                    })
+                    Text(text = "Category : ", modifier = Modifier
+                        .weight(1F)
+                        .clickable {
+                            stack.set(4)
+                        })
                     category?.let {
                         Row(
                             modifier = Modifier.weight(1F),
@@ -476,7 +489,10 @@ fun AddTaskScreen(
                 )
             }
             if (successfullyDone.value){
-                CustomDialog(onSuccessfullyDone)
+
+                showSnackbar("Your task has successfully added.",scope)
+                onSuccessfullyDone()
+
             }
 
         }
@@ -485,69 +501,6 @@ fun AddTaskScreen(
 
 }
 
-@Composable
-fun CustomDialog( onDismiss : ()->Unit) {
-    Dialog(onDismissRequest = { onDismiss() }) {
-        CustomDialogUI()
-    }
-}
-
-//Layout
-@Composable
-fun CustomDialogUI(modifier: Modifier = Modifier){
-    Card(
-        //shape = MaterialTheme.shapes.medium,
-        shape = RoundedCornerShape(10.dp),
-        // modifier = modifier.size(280.dp, 240.dp)
-        modifier = Modifier.padding(10.dp,5.dp,10.dp,10.dp),
-        
-    ) {
-        Column(
-            modifier
-//                .background(Color.White)
-        ) {
-
-            //.......................................................................
-            Image(
-                painter = painterResource(id = R.drawable.baseline_add_task_24),
-                contentDescription = null, // decorative
-                contentScale = ContentScale.Fit,
-                colorFilter  = ColorFilter.tint(
-                    color = MaterialTheme.colorScheme.onPrimary
-                ),
-                modifier = Modifier
-                    .padding(top = 35.dp)
-                    .height(70.dp)
-                    .fillMaxWidth(),
-
-                )
-
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Your request has been done.",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(top = 5.dp)
-                        .fillMaxWidth(),
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-            }
-          
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp),
-                horizontalArrangement = Arrangement.End) {
-
-                
-
-            }
-        }
-    }
-}
 
 
 
