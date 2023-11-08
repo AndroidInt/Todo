@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +23,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -63,6 +66,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -85,8 +89,6 @@ fun TitleInput(
     initTitle: String,
     onSetTitle: (String) -> Unit,
 ) {
-
-
     var title by remember { mutableStateOf(initTitle) }
     var confirmToNext by remember {
         if (initTitle.length > 4) {
@@ -97,19 +99,14 @@ fun TitleInput(
     }
     val maxCharacter = 25
     val focusManager = LocalFocusManager.current
-
-
     Card(
         modifier = Modifier
             .padding(8.dp)
             .imePadding()
     ) {
-
-        Column() {
-
+        Column {
             Row(modifier = Modifier.padding(8.dp)) {
                 OutlinedTextField(
-
                     value = title,
                     placeholder = { Text(text = "write somethings ...") },
                     label = { Text(text = "Title") }, onValueChange = {
@@ -124,10 +121,7 @@ fun TitleInput(
                     }), singleLine = true, modifier = Modifier
                         .fillMaxWidth()
                 )
-
-
             }
-
             Row(modifier = Modifier.padding(8.dp)) {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
@@ -136,14 +130,9 @@ fun TitleInput(
                 ) {
                     Text(text = "Next")
                 }
-
-
             }
         }
-
     }
-
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -325,10 +314,15 @@ fun CalendarTaskSet(
                                     Box(
                                         modifier = Modifier
                                             .defaultMinSize(40.dp, 40.dp)
-                                            .clickable {
+                                            .clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null
+                                            ) {
+
                                                 it?.let {
                                                     day = it
                                                 }
+
 
                                             }
                                             .background(
@@ -501,7 +495,272 @@ fun CalendarTaskSet(
 
 }
 
-private fun numberToDigit(number: Int) = if (number < 10) "0$number" else number.toString()
+
+@Composable
+fun CalendarTaskSetV2(
+    modifier: Modifier = Modifier,
+    initYear: Int,
+    initMonth: Int,
+    initDay: Int,
+    startDayOfWeek: DayOfWeek = DayOfWeek.Monday,
+    onSelectedDay: (year: Int, month: Int, day: Int) -> Unit
+) {
+
+
+    val calendar = PersianDate()
+
+    var year by remember {
+        mutableStateOf(initYear)
+    }
+
+    var month by remember {
+        mutableStateOf(initMonth)
+
+    }
+
+    var day by remember {
+        mutableStateOf(initDay)
+    }
+    val confirmToNext by remember {
+        derivedStateOf {
+            mutableStateOf(
+                day != 0
+            )
+        }
+
+    }
+
+    val firstDayOfMonth by remember {
+        derivedStateOf {
+            mutableStateOf(
+                calendar.setGrgYear(year).setGrgMonth(month)
+                    .dayOfWeek() - calendar.setGrgMonth(month).grgDay.mod(7) - 1
+            )
+        }
+    }
+
+    val daysList = mutableListOf<Int?>()
+
+    daysList.clear()
+    if (firstDayOfMonth.value < 0) firstDayOfMonth.value += 7
+    repeat(firstDayOfMonth.value) {
+        daysList.add(null)
+    }
+
+    repeat(calendar.getGrgMonthLength(year, month)) {
+        daysList.add(it + 1)
+    }
+
+    Card(
+        modifier = modifier
+            .padding(8.dp)
+            .wrapContentHeight(unbounded = true)
+    ) {
+        Column(verticalArrangement = Arrangement.Top) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(8.dp)
+//                    .weight(7F)
+
+            ) {
+                Column(
+                    modifier = Modifier.weight(7F),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row {
+                        //make static name header of week based on starting day of week
+                        val daysWeek = mutableListOf(startDayOfWeek.toString().take(3))
+                        var day = startDayOfWeek
+                        repeat(6) {
+                            day = day.next()
+                            daysWeek.add(day.toString().take(3))
+                        }
+                        Row(horizontalArrangement = Arrangement.Start) {
+                            daysWeek.forEach {
+                                Box(
+                                    modifier = Modifier.sizeIn(30.dp, 30.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+
+                                    Text(text = it, style =  MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+
+                    }
+
+                    Column {
+                        daysList.chunked(7).forEach { week ->
+
+                            Row {
+                                week.forEach {
+
+                                    Box(
+                                        modifier = Modifier
+                                            .defaultMinSize(30.dp, 30.dp)
+                                            .clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null
+                                            ) {
+
+                                                it?.let {
+                                                    day = it
+                                                }
+                                                onSelectedDay(year, month, day)
+
+                                            }
+                                            .background(
+                                                color = Color.Unspecified,
+                                                shape = CircleShape
+                                            )
+                                            .border(
+                                                1.dp,
+                                                if (it != null && day == it) MaterialTheme.colorScheme.onBackground else Color.Unspecified,
+                                                CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center,
+
+                                        ) {
+                                        it?.let {
+                                            Text(text = it.toString(), style = MaterialTheme.typography.bodySmall )
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+
+                        }
+                    }
+
+
+                }
+
+
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(2F)
+
+                ) {
+
+                    IconButton(onClick = {
+                        val cal = PersianDate()
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .addMonth()
+                        year = cal.grgYear
+                        month = cal.grgMonth
+                        day = cal.grgDay
+                    }) {
+                        Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = "")
+                    }
+                    Text(text = year.toString(), style = MaterialTheme.typography.bodySmall)
+                    Text(text = calendar.getGrgMonthName(month).take(3), style = MaterialTheme.typography.bodySmall)
+                    IconButton(onClick = {
+                        val cal = PersianDate()
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .subMonth()
+
+                        year = cal.grgYear
+                        month = cal.grgMonth
+                        day = cal.grgDay
+                    }) {
+                        Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "")
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+//                    .weight(2F)
+            ) {
+                Button(modifier = Modifier
+                    .weight(0.7F)
+                    .wrapContentSize(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground),
+                    onClick = {
+                        year = calendar.grgYear
+                        month = calendar.grgMonth
+                        day = calendar.grgDay
+                        onSelectedDay(year, month, day)
+                    }) {
+                    Text(text = "Today", style = MaterialTheme.typography.bodySmall)
+
+                }
+
+
+                Button(modifier = Modifier
+                    .weight(0.9F)
+                    .wrapContentSize(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground),
+                    onClick = {
+                        val cal = PersianDate()
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .addWeek()
+                        year = cal.grgYear
+                        month = cal.grgMonth
+                        day = cal.grgDay
+                        onSelectedDay(year, month, day)
+                    }) {
+                    Text(text = "Next week", style = MaterialTheme.typography.bodySmall)
+
+                }
+
+
+
+                Button(
+                    modifier = Modifier
+                        .weight(1F)
+                        .wrapContentSize(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground),
+                    onClick = {
+                        val cal = PersianDate()
+                            .setGrgMonth(month)
+                            .setGrgYear(year)
+                            .setGrgDay(day)
+                            .addMonth()
+                        year = cal.grgYear
+                        month = cal.grgMonth
+                        day = cal.grgDay
+                        onSelectedDay(year, month, day)
+                    }
+                ) {
+                    Text(text = "Next month", style = MaterialTheme.typography.bodySmall)
+                }
+
+            }
+
+
+        }
+
+
+    }
+
+
+}
 
 @ExperimentalFoundationApi
 @Composable
@@ -606,9 +865,75 @@ fun ClockTaskSet(
 
 }
 
+@ExperimentalFoundationApi
+@Composable
+fun ClockTaskSetV2(
+    modifier: Modifier = Modifier,
+    initStartHour: Int = 0,
+    initStartMinute: Int = 0,
+    initEndHour: Int = 0,
+    initEndMinute: Int = 0,
+    onSetDuration: (
+        startHour: Int,
+        startMinute: Int,
+        endHour: Int,
+        endMinute: Int
+
+    ) -> Unit
+
+) {
+    var minDuration = 10
+
+    var startHour by remember {
+        mutableStateOf(initStartHour)
+    }
+    var startMinute by remember {
+        mutableStateOf(initStartMinute)
+    }
+    var endHour by remember {
+        mutableStateOf(initEndHour)
+    }
+    var endMinute by remember {
+        mutableStateOf(initEndMinute)
+    }
+
+    Card(
+        modifier = modifier
+
+    ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(text = "From")
+                    Spacer(modifier = Modifier.width(16.dp))
+                    ClockComponentV2(startHour, startMinute) { hour, minute ->
+                        startHour = hour
+                        startMinute = minute
+
+
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "to")
+                    Spacer(modifier = Modifier.width(16.dp))
+                    ClockComponentV2(endHour, endMinute) { hour, minute ->
+                        endHour = hour
+                        endMinute = minute
+                    }
+                }
+                onSetDuration(startHour, startMinute, endHour, endMinute)
+
+    }
+
+}
+
 
 @Composable
-fun ClockComponent(initHour: Int, initMinute: Int, onSetClock: (hour: Int, minute: Int) -> Unit) {
+fun ClockComponent(initHour: Int, initMinute: Int, onSetClock: (hour: Int, minute: Int) -> Unit)
+{
 
 
     var hour by remember {
@@ -650,7 +975,6 @@ fun ClockComponent(initHour: Int, initMinute: Int, onSetClock: (hour: Int, minut
 
             Box(
                 modifier = Modifier
-                    .defaultMinSize(40.dp, 40.dp)
                     .pointerInput(Unit) {
                         detectVerticalDragGestures(
                             onVerticalDrag = { _, delta ->
@@ -721,7 +1045,6 @@ fun ClockComponent(initHour: Int, initMinute: Int, onSetClock: (hour: Int, minut
 
             Box(
                 modifier = Modifier
-                    .defaultMinSize(40.dp, 40.dp)
                     .pointerInput(Unit) {
                         detectVerticalDragGestures(
                             onVerticalDrag = { _, delta ->
@@ -755,6 +1078,215 @@ fun ClockComponent(initHour: Int, initMinute: Int, onSetClock: (hour: Int, minut
                                     } else if (basicDelta > 0) {
                                         direction = false
                                         if (minute < 59) minute++
+                                    }
+                                }
+
+
+                            }
+                        )
+                    }, contentAlignment = Alignment.Center
+            ) {
+
+                AnimatedCounter(
+                    modifier = Modifier,
+                    count = minute, direction = direction,
+                    onSetCounter = {
+                        onSetClock(hour, minute)
+                    }
+                )
+
+
+            }
+
+
+        }
+
+
+    }
+
+}
+
+
+@Composable
+fun ClockComponentV2(initHour: Int, initMinute: Int, onSetClock: (hour: Int, minute: Int) -> Unit)
+{
+
+
+    var hour by remember {
+        mutableStateOf(initHour)
+    }
+    var minute by remember {
+        mutableStateOf(initMinute)
+    }
+    var direction by remember {
+        mutableStateOf(true)
+    }
+
+    val longSwipeChangeCount = 5
+    Row(
+        modifier = Modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+
+
+        var columnSizeHour by remember {
+            mutableStateOf(0F)
+        }
+        var columnSizeMinute by remember {
+            mutableStateOf(0F)
+        }
+
+
+        Column(
+            modifier = Modifier.onGloballyPositioned {
+                columnSizeHour = it.size.height.toFloat()
+            },
+
+            horizontalAlignment = Alignment.CenterHorizontally
+
+        ) {
+            var basicDelta = 0F
+
+
+            Box(
+                modifier = Modifier
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { _, delta ->
+
+                                if (abs(delta) > columnSizeHour / 2) {
+                                    if (delta < 0) {
+                                        direction = true
+                                        repeat(longSwipeChangeCount) {
+                                            if (hour > 0){
+                                                hour--
+                                            } else {
+                                                hour = 23
+                                            }
+                                        }
+
+
+                                    } else if (delta > 0) {
+                                        direction = false
+                                        repeat(longSwipeChangeCount) {
+                                            if (hour < 23){
+                                                hour++
+                                            } else {
+                                                hour = 0
+                                            }
+                                        }
+
+                                    }
+                                }
+                                basicDelta = delta
+
+
+                            },
+                            onDragEnd = {
+
+                                if (abs(basicDelta) < columnSizeHour / 2) {
+                                    if (basicDelta < 0) {
+                                        direction = true
+                                        if (hour > 0){
+                                            hour--
+                                        } else{
+                                            hour = 23
+                                        }
+                                    } else if (basicDelta > 0) {
+                                        direction = false
+                                        if (hour < 23){
+                                            hour++
+                                        } else {
+                                            hour = 0
+                                        }
+                                    }
+                                }
+
+
+                            }
+                        )
+                    }, contentAlignment = Alignment.Center
+            ) {
+
+                AnimatedCounter(
+                    modifier = Modifier,
+                    count = hour, direction = direction,
+                    onSetCounter = {
+                        onSetClock(hour, minute)
+                    }
+                )
+
+
+            }
+
+
+        }
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = ":")
+        Spacer(modifier = Modifier.width(4.dp))
+        Column(
+            modifier = Modifier.onGloballyPositioned {
+                columnSizeMinute = it.size.height.toFloat()
+            },
+
+            horizontalAlignment = Alignment.CenterHorizontally
+
+        ) {
+            var basicDelta = 0F
+
+
+            Box(
+                modifier = Modifier
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { _, delta ->
+
+                                if (abs(delta) > columnSizeHour / 2) {
+                                    if (delta < 0) {
+                                        direction = true
+                                        repeat(longSwipeChangeCount) {
+                                            if (minute > 0){
+                                                minute--
+                                            } else{
+                                                minute = 59
+                                            }
+                                        }
+
+
+                                    } else if (delta > 0) {
+                                        direction = false
+                                        repeat(longSwipeChangeCount) {
+                                            if (minute < 59){
+                                                minute++
+                                            } else {
+                                                minute = 0
+                                            }
+                                        }
+
+                                    }
+                                }
+                                basicDelta = delta
+
+
+                            },
+                            onDragEnd = {
+
+                                if (abs(basicDelta) < columnSizeHour / 2) {
+                                    if (basicDelta < 0) {
+                                        direction = true
+                                        if (minute > 0){
+                                            minute--
+                                        } else{
+                                            minute = 59
+                                        }
+                                    } else if (basicDelta > 0) {
+                                        direction = false
+                                        if (minute < 59) {
+                                            minute++
+                                        } else {
+                                            minute = 0
+                                        }
                                     }
                                 }
 
@@ -894,7 +1426,10 @@ fun ColorCircle(
 
     Box(
         modifier = modifier
-            .clickable {
+            .clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null
+            ) {
                 colorState.value = color
             }
             .clearAndSetSemantics { contentDescription = "choose $color" },
@@ -912,6 +1447,37 @@ fun ColorCircle(
 
     }
 
+}
+
+
+@Composable
+fun ColorCircleV2(
+    modifier: Modifier = Modifier,
+    color: Color,
+    colorState: MutableState<Color>
+) {
+
+    Box(
+        modifier = modifier
+            .clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null
+            ) {
+                colorState.value = color
+            }
+            .clearAndSetSemantics { contentDescription = "choose $color" },
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(
+            modifier = Modifier
+                .padding(2.dp)
+                .size(34.dp, 34.dp)
+        ) {
+            drawCircle(color)
+        }
+        if (colorState.value == color)
+            Icon(imageVector = Icons.Default.Done, contentDescription = "")
+    }
 
 }
 
@@ -1098,6 +1664,64 @@ fun ColorPicker(
 //            }
 //    }
 
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ColorPickerV2(
+    modifier: Modifier = Modifier,
+    categories: List<Category>,
+    onSetCategory: (category: Category) -> Unit
+) {
+    val colorState: MutableState<Color> = remember { mutableStateOf(DataStore.colorsV2[0]) }
+    val categoryName by remember {
+        derivedStateOf {
+            var name = ""
+            categories.forEach {
+                if (categoryToColor(it.color) == colorState.value)
+                    name = it.name
+            }
+            if (!categories.any { categoryToColor(it.color) == colorState.value })
+                name = ""
+            mutableStateOf(name)
+        }
+    }
+    val name by remember {
+        derivedStateOf {
+            mutableStateOf(categoryName.value)
+        }
+    }
+    Card(
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(4.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            DataStore.colorsV2.chunked(6).forEach {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    for (color in it)
+                        ColorCircle(
+                            modifier = Modifier.weight(1F), color = color, colorState = colorState
+                        )
+                }
+            }
+        }
+    }
+    onSetCategory(
+        Category(
+            color = DataStore.colorsV2.indexOf(colorState.value)
+        )
+    )
 }
 
 

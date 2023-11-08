@@ -150,4 +150,7 @@ dependencies {
 // Needed for createAndroidComposeRule, but not createComposeRule:
     debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
 
+
+
+
 }

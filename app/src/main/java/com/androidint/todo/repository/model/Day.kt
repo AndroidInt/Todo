@@ -22,7 +22,6 @@ import kotlin.time.Duration.Companion.minutes
 @Parcelize
 @Entity
 data class Task(
-
     val title: String,
     val description: String?,
     @Embedded(prefix = "day_")
@@ -33,10 +32,17 @@ data class Task(
     val priority: Int = 1,
     var done: Boolean = false,
     @PrimaryKey(autoGenerate = true)
-    var taskId: Int? = null
+    var taskId: Int? = null,
+
+//    var tags:List<Tag>? = null
 ) :Parcelable
 
-
+@Entity(indices = [Index(value = ["name"], unique = true)])
+data class Tag(
+    val name: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int? = null
+)
 enum class DayOfWeek() {
     Monday,
     Tuesday,
@@ -120,7 +126,7 @@ data class TimeTask(
 data class Category(
 
     @ColumnInfo(name = "name") var name: String = "Inbox",
-    @ColumnInfo(name = "color") val color: Int = 0,
+    @ColumnInfo(name = "color") var color: Int = 0,
     @PrimaryKey(autoGenerate = true)
     var categoryId: Int? = null,
 ):Parcelable
