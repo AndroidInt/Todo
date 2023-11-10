@@ -10,8 +10,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -207,6 +205,7 @@ fun CalendarV2(
     month: MutableState<Int>,
     day: MutableState<Int>,
     startDayOfWeek: DayOfWeek = DayOfWeek.Monday,
+    onSelectDate : (dayOfWeek:Int,day:Int,month:Int,year:Int) -> Unit
 ) {
     val showCalendar = remember {
         mutableStateOf(false)
@@ -242,6 +241,7 @@ fun CalendarV2(
                     )
                 }
                 Text(
+
                     text = "${date.dayEnglishName()} " +
                             "${day.value} " +
                             "${monthName.value.take(3)} " +
@@ -286,6 +286,9 @@ fun CalendarV2(
                         month.value = date.grgMonth
                         monthName.value = date.grgMonthName
                         day.value = date.grgDay
+                        var dayOfWeek = date.dayOfWeek() - date.grgDay.mod(7) - 1
+                        if (dayOfWeek < 0) dayOfWeek += 7
+                        onSelectDate(dayOfWeek,selectDay,selectMonth,selectYear)
 //                        showCalendar.value = false
                     }
                 )
@@ -674,7 +677,6 @@ fun Notify() {
 
 enum class ERepeat {
     None,
-    Daily,
     Weekly,
     Monthly
 }
@@ -732,7 +734,7 @@ fun RepeatTask() {
                         if (!repeat.value){
                             repeatType.value = ERepeat.None
                         }else{
-                            repeatType.value = ERepeat.Monthly
+                            repeatType.value = ERepeat.Weekly
                         }
                     },
                         thumbContent = {
@@ -786,18 +788,6 @@ fun RepeatTask() {
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
                             ) {
-                                repeatType.value = ERepeat.Daily
-                            }
-                    ) {
-                        Text(text = "Daily")
-                    }
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
                                 repeatType.value = ERepeat.Weekly
                             }
                     ) {
@@ -818,6 +808,7 @@ fun RepeatTask() {
 
                 }
             }
+
         }
     }
 }
@@ -875,9 +866,9 @@ fun ShowEditText() {
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                CalendarV2(
-                    year, month, day
-                )
+//                CalendarV2(
+//                    year, month, day
+//                )
                 Spacer(modifier = Modifier.height(8.dp))
                 val list = mutableListOf<Category>()
 
@@ -893,8 +884,8 @@ fun ShowEditText() {
                 Spacer(modifier = Modifier.height(8.dp))
                 Notify()
 
-                Spacer(modifier = Modifier.height(8.dp))
-                RepeatTask()
+//                Spacer(modifier = Modifier.height(8.dp))
+//                RepeatTask()
 
                 Spacer(modifier = Modifier.height(buttonHeight.value.dp))
             }

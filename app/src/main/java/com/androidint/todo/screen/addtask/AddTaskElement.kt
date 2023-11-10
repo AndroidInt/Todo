@@ -48,7 +48,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -57,8 +56,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -72,7 +69,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.DayOfWeek
-
 import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.DataStore
 import com.androidint.todo.utils.DataStore.Companion.categoryToColor
@@ -91,7 +87,7 @@ fun TitleInput(
 ) {
     var title by remember { mutableStateOf(initTitle) }
     var confirmToNext by remember {
-        if (initTitle.length > 4) {
+        if (initTitle.length > 2) {
             mutableStateOf(true)
         } else {
             mutableStateOf(false)
