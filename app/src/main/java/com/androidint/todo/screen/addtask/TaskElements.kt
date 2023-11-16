@@ -3,9 +3,19 @@ package com.androidint.todo.screen.addtask
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.InfiniteTransition
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.repeatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -51,6 +61,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -60,6 +71,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -71,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import com.androidint.todo.R
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.DayOfWeek
+import com.androidint.todo.repository.model.Tag
 import com.androidint.todo.repository.model.TimeTask
 import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.DataStore
@@ -205,7 +219,8 @@ fun CalendarV2(
     month: MutableState<Int>,
     day: MutableState<Int>,
     startDayOfWeek: DayOfWeek = DayOfWeek.Monday,
-    onSelectDate : (dayOfWeek:Int,day:Int,month:Int,year:Int) -> Unit
+    onSelectDate : (dayOfWeek:Int,day:Int,month:Int,year:Int) -> Unit,
+    error: State<Boolean> = remember{ mutableStateOf(true) }
 ) {
     val showCalendar = remember {
         mutableStateOf(false)
@@ -214,13 +229,35 @@ fun CalendarV2(
     var monthName = remember {
         mutableStateOf(date.grgMonthName)
     }
-
+    val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+    val borderColor by infiniteTransition.animateColor(
+        initialValue = Color.Unspecified,
+        targetValue = MaterialTheme.colorScheme.error,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "rotation"
+    )
+//    val borderColor by animateColorAsState(
+//        targetValue = MaterialTheme.colorScheme.error,
+//        animationSpec = repeatable(
+//            iterations = 5,
+//            animation = tween(
+//                durationMillis = 1000,
+//                easing = LinearEasing
+//            ),
+//            repeatMode = RepeatMode.Reverse
+//        ), label = ""
+//    )
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
             .clickable {
                 showCalendar.value = !showCalendar.value
-            },
+            }
+        ,
+        border = if(error.value) BorderStroke(1.dp,borderColor) else null,
         elevation = CardDefaults.cardElevation(
             defaultElevation = 24.dp
         )
@@ -350,13 +387,21 @@ fun Clock(
 @Composable
 fun ColorV2(
     categories: List<Category>,
-    onSetCategory: (category: Category) -> Unit
+    onSetCategory: (category: Category) -> Unit,
+    category : Category
 ) {
+    val initCategory = remember{
+        mutableStateOf(
+            category
+        )
+    }
     val showColorPallet = remember {
         mutableStateOf(false)
     }
     val colorState = remember {
-        mutableStateOf(DataStore.colorsV2[0])
+        mutableStateOf(
+            DataStore.colorsV2[initCategory.value.color]
+        )
     }
     val categoryName by remember {
         derivedStateOf {
@@ -372,7 +417,7 @@ fun ColorV2(
     }
     val name by remember {
         derivedStateOf {
-            mutableStateOf(categoryName.value)
+                mutableStateOf(categoryName.value)
         }
     }
     Card(
@@ -474,7 +519,9 @@ fun ColorV2(
                     }
                 }
             }
-            onSetCategory(Category(name.value, DataStore.colorsV2.indexOf(colorState.value)))
+            onSetCategory(
+                Category(name.value, DataStore.colorsV2.indexOf(colorState.value))
+            )
         }
     }
 }
@@ -482,7 +529,8 @@ fun ColorV2(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddTag(
-    tagList: SnapshotStateList<String>,
+    tagList: SnapshotStateList<Tag>,
+    setTag:(tag : Tag)-> Unit = {}
 ) {
     var tag = remember {
         mutableStateOf("")
@@ -551,8 +599,10 @@ fun AddTag(
                     ) {
                         IconButton(
                             onClick = {
-                                if (tag.value.length in 1..15 && !tagList.contains(tag.value)) {
-                                    tagList.add(tag.value)
+                                if (tag.value.length in 1..15 && !tagList.any {
+                                        tag.value == it.name
+                                    }) {
+                                    tagList.add(Tag(name = tag.value))
                                 }
                                 tag.value = ""
                             }, enabled = tagList.size < 5
@@ -575,7 +625,7 @@ fun AddTag(
                                 tagList.remove(it)
                             },
                                 label = {
-                                    Text(text = it, style = MaterialTheme.typography.bodySmall)
+                                    Text(text = it.name, style = MaterialTheme.typography.bodySmall)
                                 },
                                 trailingIcon = {
                                     Icon(
@@ -828,7 +878,7 @@ fun ShowEditText() {
     var day = remember { mutableStateOf(date.grgDay) }
     var category = remember { mutableStateOf(Category()) }
     var tagList = remember {
-        mutableStateListOf<String>()
+        mutableStateListOf<Tag>()
     }
 
     var buttonHeight = remember {
@@ -866,9 +916,9 @@ fun ShowEditText() {
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-//                CalendarV2(
-//                    year, month, day
-//                )
+                CalendarV2(
+                    year, month, day,onSelectDate = { _,_,_,_ -> }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 val list = mutableListOf<Category>()
 
@@ -876,7 +926,8 @@ fun ShowEditText() {
                     categories = list,
                     onSetCategory = {
                         category.value = it
-                    }
+                    },
+                    category = Category()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 AddTag(tagList)

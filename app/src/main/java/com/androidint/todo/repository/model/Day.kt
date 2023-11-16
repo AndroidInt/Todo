@@ -7,6 +7,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
+import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import kotlinx.parcelize.Parcelize
@@ -34,15 +35,43 @@ data class Task(
     @PrimaryKey(autoGenerate = true)
     var taskId: Int? = null,
 
-//    var tags:List<Tag>? = null
 ) :Parcelable
 
 @Entity(indices = [Index(value = ["name"], unique = true)])
 data class Tag(
     val name: String,
     @PrimaryKey(autoGenerate = true)
-    val id: Int? = null
+    val tagId: Int? = null
 )
+@Entity(primaryKeys = ["taskId","tagId"])
+data class TaskTagCrossRef(
+    val taskId: Int,
+    val tagId:Int
+)
+
+data class TagWithTasks(
+    @Embedded
+    val tag : Tag,
+    @Relation(
+        entity = Task::class,
+        parentColumn = "tagId",
+        entityColumn = "taskId",
+        associateBy = Junction(TaskTagCrossRef::class)
+    )
+    val tasks: List<Task>
+)
+data class TaskWithTags(
+    @Embedded
+    val task : Task,
+    @Relation(
+        entity = Tag::class,
+        parentColumn = "taskId",
+        entityColumn = "tagId",
+        associateBy = Junction(TaskTagCrossRef::class)
+    )
+    val tags: List<Tag>
+)
+
 enum class DayOfWeek() {
     Monday,
     Tuesday,
@@ -124,7 +153,6 @@ data class TimeTask(
 @Parcelize
 @Entity(indices = [Index(value = ["name", "color"], unique = true)])
 data class Category(
-
     @ColumnInfo(name = "name") var name: String = "Inbox",
     @ColumnInfo(name = "color") var color: Int = 0,
     @PrimaryKey(autoGenerate = true)

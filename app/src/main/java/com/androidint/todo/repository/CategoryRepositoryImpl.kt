@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(private val categoryDao: CategoryDao) {
 
-    suspend fun insert(category: Category) {
+    suspend fun insert(category: Category): Int {
         return categoryDao.insert(category)
     }
 

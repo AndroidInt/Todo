@@ -24,9 +24,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Day
+import com.androidint.todo.repository.model.Tag
 import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TimeTask
 import saman.zamani.persiandate.PersianDate
+
+sealed class TaskState{
+    object Successfull: TaskState()
+    object Idle: TaskState()
+    object Proccessing: TaskState()
+
+    class  Error( val message:String) : TaskState()
+}
 
 
 @Composable
@@ -39,10 +48,13 @@ fun TaskElementScreen(
 //    month: State<Int> = remember { mutableStateOf(PersianDate().grgMonth) },
 //    day: State<Int> = remember { mutableStateOf(PersianDate().grgDay) },
     category: State<Category> = remember { mutableStateOf(Category()) },
+    setCategory: (category: Category)-> Unit = {},
     categories: SnapshotStateList<Category> = remember { mutableStateListOf() },
-    addTask: (task: Task) -> Unit = {},
-    updateTask: (task: Task) -> Unit = {},
-    addTaskState: State<Boolean> = remember { mutableStateOf(true) }
+    addTask: (task: Task, tags: List<Tag>,category: Category) -> Unit = {_,_,_ -> },
+    updateTask: (task: Task, tags: List<Tag>,category: Category) -> Unit = {_,_,_ -> },
+    addTaskState: State<Boolean> = remember { mutableStateOf(true) },
+    tagList: SnapshotStateList<Tag> = remember { mutableStateListOf() },
+    onPushTaskState: State<TaskState>
 ) {
     val date = PersianDate()
     val initTitle = remember {
@@ -120,9 +132,19 @@ fun TaskElementScreen(
         )
     }
 
-    val tagList = remember {
-        mutableStateListOf<String>()
-    }
+    val initTagList =
+        if (tagList.isNotEmpty()){
+            remember {
+                mutableStateListOf<Tag>()
+            }.also {
+                it.addAll(tagList.toList())
+            }
+        }else{
+            remember {
+                mutableStateListOf<Tag>()
+            }
+        }
+
     val buttonHeight = remember { mutableStateOf(0) }
     Box(
         modifier = Modifier
@@ -148,10 +170,8 @@ fun TaskElementScreen(
                 initDuration.value.endHour,
                 initDuration.value.endMinute,
                 onSetDuration = { sh, sm, eh, em ->
-                    initDuration.value.startHour = sh
-                    initDuration.value.startMinute = sm
-                    initDuration.value.endHour = eh
-                    initDuration.value.endMinute = em
+                    val timeTask = TimeTask(sh,sm,eh,em)
+                    initDuration.value = timeTask
                 }
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -169,10 +189,14 @@ fun TaskElementScreen(
                 categories = categories.toList(),
                 onSetCategory = {
                     initCategory.value = it
-                }
+                    setCategory(it)
+                },
+                category = category.value
             )
             Spacer(modifier = Modifier.height(8.dp))
-            AddTag(tagList)
+            AddTag(initTagList, setTag = {
+                initTagList.add(it)
+            })
 
             Spacer(modifier = Modifier.height(8.dp))
             Notify()
@@ -199,17 +223,26 @@ fun TaskElementScreen(
                     done = false
                 )
                 if (addTaskState.value) {
-                    addTask(task)
+                    addTask(task,initTagList.toList(),initCategory.value)
                 } else {
-                    updateTask(task)
+                    updateTask(task,initTagList.toList(),initCategory.value)
                 }
             },
                 modifier = Modifier
                     .onGloballyPositioned {
                         buttonHeight.value = it.size.height / 2
                     }
-                    .fillMaxWidth()) {
-                Text(text = "Add task")
+                    .fillMaxWidth(),
+                enabled = initTitle.value.isNotEmpty() && initDuration.value.eventDuration() > 9 && initCategory.value.name.isNotEmpty()
+
+            ) {
+                Text(text =
+                if (addTaskState.value){
+                    "Add task"
+                }else{
+                    "Update Task"
+                }
+                )
             }
         }
     }
@@ -220,10 +253,18 @@ fun TaskElementScreen(
 @Preview
 @Composable
 fun ShowTaskElementScreen() {
+    var list = remember {
+        mutableStateListOf<Category>()
+    }
+    val cat = Category("AOSP",3)
+    list.add(cat)
     TaskElementScreen(
         task = remember {
             mutableStateOf(null)
         },
-        addTaskState = remember { mutableStateOf(true) }
+        addTaskState = remember { mutableStateOf(true) },
+        categories = list,
+//        category = remember{ mutableStateOf(cat)}
+        onPushTaskState =  remember{ mutableStateOf(TaskState.Error(""))}
     )
 }
