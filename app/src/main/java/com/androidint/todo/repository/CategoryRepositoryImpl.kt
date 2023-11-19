@@ -32,7 +32,7 @@ class CategoryRepositoryImpl @Inject constructor(private val categoryDao: Catego
         return categoryDao.getCategoryByColor(color)
     }
 
-    suspend fun updateCategory(category: Category) {
+    suspend fun updateCategory(category: Category):Int {
         return categoryDao.updateCategory(category)
     }
 

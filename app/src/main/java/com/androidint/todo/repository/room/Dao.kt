@@ -47,16 +47,25 @@ interface TaskDao {
     fun getTaskByDate(year: Int, month: Int, day: Int): Flow<List<Task>>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertTag(tag: Tag):Flow<List<Int>>
+    suspend fun insertTag(tag: Tag):Int
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertTaskTagCrossRef(taskTag: TaskTagCrossRef)
+    suspend fun insertTags(tags: List<Tag>):List<Int>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertTaskTagCrossRef(taskTags: List<TaskTagCrossRef>)
 
     @Query("Select * From Task")
     fun getTaskWithTags(): Flow<List<TaskWithTags>>
+    @Query("Select * From Task Where taskId ==:id")
+    fun getTaskWithTags(id: Int): TaskWithTags
 
     @Query("Select * From Tag")
     fun getTagWithTasks(): Flow<List<TagWithTasks>>
+
+    @Delete
+    suspend fun deleteTaskTagCrossRef(taskTags : List<TaskTagCrossRef>)
+
 
 }
 
@@ -81,12 +90,13 @@ interface CategoryDao {
     @Query("SELECT * FROM Category T WHERE T.color == :color")
     suspend fun getCategoryByColor(color: Int): Category?
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    @Update
-    suspend fun updateCategory(category: Category)
+
+    @Update(onConflict = OnConflictStrategy.ABORT)
+    suspend fun updateCategory(category: Category):Int
 
     @Query("Select * From Category T WHERE T.name==:name")
     suspend fun contain(name: String): Category?
+
 
 
 }

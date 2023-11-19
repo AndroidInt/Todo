@@ -30,11 +30,11 @@ import com.androidint.todo.repository.model.TimeTask
 import saman.zamani.persiandate.PersianDate
 
 sealed class TaskState{
-    object Successfull: TaskState()
+    class Success(val id :Int): TaskState()
     object Idle: TaskState()
     object Proccessing: TaskState()
 
-    class  Error( val message:String) : TaskState()
+    class  Error( val message:String?) : TaskState()
 }
 
 

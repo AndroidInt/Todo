@@ -48,22 +48,32 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.getTaskByDate(year, month, day)
     }
 
+    suspend fun insertTags(tags:List<Tag>):List<Int>{
+        return taskDao.insertTags(tags)
+    }
 
-    suspend fun insertTag(tag:Tag): Flow<List<Int>> {
+
+    suspend fun insertTag(tag:Tag): Int {
         return taskDao.insertTag(tag)
     }
 
-    suspend fun insertTaskTagCrossRef(taskTag: TaskTagCrossRef) {
-        return taskDao.insertTaskTagCrossRef(taskTag)
+    suspend fun insertTaskTagCrossRef(taskTags: List<TaskTagCrossRef>) {
+        return taskDao.insertTaskTagCrossRef(taskTags)
     }
 
     suspend fun getTaskWithTags(): Flow<List<TaskWithTags>> {
         return taskDao.getTaskWithTags()
+    }
+    suspend fun getTaskWithTags(id: Int): TaskWithTags {
+        return taskDao.getTaskWithTags(id)
     }
 
     suspend fun getTagWithTasks(): Flow<List<TagWithTasks>> {
         return taskDao.getTagWithTasks()
     }
 
+    suspend fun deleteTaskTagCrossRef(taskTags : List<TaskTagCrossRef>){
+        taskDao.deleteTaskTagCrossRef(taskTags)
+    }
 
 }
