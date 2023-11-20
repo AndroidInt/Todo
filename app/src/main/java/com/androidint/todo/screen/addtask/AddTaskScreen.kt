@@ -106,6 +106,7 @@ fun MutableList<MutableState<Boolean>>.back() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AddTaskScreen(
+    taskId:Int?,
 
     conflictedDurationState: State<Boolean>,
 

@@ -1,8 +1,5 @@
 package com.androidint.todo.repository
 
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
 import com.androidint.todo.repository.model.CategoryWithTasks
 import com.androidint.todo.repository.model.Tag
 import com.androidint.todo.repository.model.TagWithTasks

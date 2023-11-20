@@ -3,8 +3,10 @@ package com.androidint.todo
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.androidint.todo.screen.addtask.AddTaskScreen
 import com.androidint.todo.screen.addtask.AddTaskViewModel
 import com.androidint.todo.screen.mainPage.MainPageCompose
@@ -33,9 +35,12 @@ fun MainNavGraph(
             )
         }
 
-        composable(route = Screens.add_task) {
+        composable(route = Screens.add_task+"/{taskId}",arguments = listOf(navArgument("taskId"){
+            type= NavType.IntType
+        })) {
             val viewModelAddTask = hiltViewModel<AddTaskViewModel>()
             AddTaskScreen(
+                taskId = it.arguments?.getInt("taskId"),
                 conflictedDurationState = viewModelAddTask.conflictedDurationState,
                 conflictedCategoryState = viewModelAddTask.conflictedCategoryState,
                 categoryList = viewModelAddTask.categoryList,
