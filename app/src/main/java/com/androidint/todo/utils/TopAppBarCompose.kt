@@ -24,8 +24,10 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBarCompose(title: String,
-                     ) {
+fun TopAppBarCompose(
+    title: String,
+    navigate: (destination: String) -> Unit
+) {
     val sendIntent: Intent = Intent().apply {
         action = Intent.ACTION_SEND
         putExtra(Intent.EXTRA_TEXT, "This is my text to send.")
@@ -34,29 +36,29 @@ fun TopAppBarCompose(title: String,
     val shareIntent = Intent.createChooser(sendIntent, null)
     val context = LocalContext.current
 
-        Column {
-            TopAppBar(
-                title = {
-                    Text(title)
-                },
-                Modifier.background(Color.Black),
-                navigationIcon = {
-                    IconButton(onClick = {
-                        Toast.makeText(context, "Menu clicked", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Icon(Icons.Filled.Menu, null)
-                    }
-                }, actions = {
-                    IconButton(onClick = {context.startActivity(shareIntent)}) {
-                        Icon(Icons.Filled.Share, null)
-                    }
-                    IconButton(onClick = {
-                        Toast.makeText(context, "calendar clicked", Toast.LENGTH_SHORT).show()
-
-                    }) {
-                        Icon(Icons.Filled.DateRange, null)
-                    }
-                })
-        }
+    Column {
+        TopAppBar(
+            title = {
+                Text(title)
+            },
+            Modifier.background(Color.Black),
+            navigationIcon = {
+                IconButton(onClick = {
+                    Toast.makeText(context, "Menu clicked", Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(Icons.Filled.Menu, null)
+                }
+            }, actions = {
+                IconButton(onClick = { context.startActivity(shareIntent) }) {
+                    Icon(Icons.Filled.Share, null)
+                }
+                IconButton(onClick = {
+                    Toast.makeText(context, "calendar clicked", Toast.LENGTH_SHORT).show()
+                    navigate(Screens.timeline)
+                }) {
+                    Icon(Icons.Filled.DateRange, null)
+                }
+            })
+    }
 
 }

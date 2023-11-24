@@ -82,7 +82,7 @@ fun MainPageCompose(
         Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopAppBarCompose(title = current_day)
+        TopAppBarCompose(title = current_day,navHostController::navigate)
 
         tasksWithCategory.let {
             tasks?.let {

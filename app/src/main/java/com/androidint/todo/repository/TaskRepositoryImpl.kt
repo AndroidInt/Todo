@@ -7,13 +7,16 @@ import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TaskTagCrossRef
 import com.androidint.todo.repository.model.TaskWithTags
 import com.androidint.todo.repository.room.TaskDao
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import okhttp3.Dispatcher
 import javax.inject.Inject
 
 
 class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
 
-    suspend fun insert(task: Task): Int {
+    suspend fun insert(task: Task): Long {
         return taskDao.insert(task)
     }
 
@@ -29,7 +32,7 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         taskDao.delete(task)
     }
 
-    suspend fun findById(id: Int): Task? {
+    suspend fun findById(id: Long): Task? {
         return taskDao.findById(id)
     }
 
@@ -37,7 +40,7 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.getCategoriesWithTasks()
     }
 
-    suspend fun updateTask(task: Task): Int {
+    suspend fun updateTask(task: Task) {
         return taskDao.updateTask(task)
     }
 
@@ -45,12 +48,12 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
         return taskDao.getTaskByDate(year, month, day)
     }
 
-    suspend fun insertTags(tags:List<Tag>):List<Int>{
+    suspend fun insertTags(tags:List<Tag>):List<Long>{
         return taskDao.insertTags(tags)
     }
 
 
-    suspend fun insertTag(tag:Tag): Int {
+    suspend fun insertTag(tag:Tag): Long {
         return taskDao.insertTag(tag)
     }
 
@@ -61,8 +64,10 @@ class TaskRepositoryImpl @Inject constructor(private val taskDao: TaskDao) {
     suspend fun getTaskWithTags(): Flow<List<TaskWithTags>> {
         return taskDao.getTaskWithTags()
     }
-    suspend fun getTaskWithTags(id: Int): TaskWithTags {
-        return taskDao.getTaskWithTags(id)
+    suspend fun getTaskWithTags(id: Long): TaskWithTags {
+        return withContext(Dispatchers.IO){
+             taskDao.getTaskWithTags(id)
+        }
     }
 
     suspend fun getTagWithTasks(): Flow<List<TagWithTasks>> {

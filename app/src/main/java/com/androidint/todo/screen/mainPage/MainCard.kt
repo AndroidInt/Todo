@@ -190,7 +190,7 @@ fun GPreview() {
         val cat = Category(
             name = "Inbox$c"
         )
-        cat.categoryId = c
+        cat.categoryId = c.toLong()
         cats.add(
             cat
         )
@@ -198,7 +198,7 @@ fun GPreview() {
     for (t in 1..50) {
         tasks.add(
             Task(
-                ownerCategoryId = Random.nextInt(4),
+                ownerCategoryId = Random.nextLong(4),
                 title = "title$t",
                 description = "Random$t",
                 day = Day(
@@ -216,7 +216,7 @@ fun GPreview() {
     for (i in 1..3) {
         val tasksWithGroup = mutableListOf<Task>()
         tasks.filter {
-            it.ownerCategoryId == i
+            it.ownerCategoryId == i.toLong()
         }.forEach {
             tasksWithGroup.add(it)
         }

@@ -2,13 +2,15 @@ package com.androidint.todo
 
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.androidint.todo.screen.addtask.AddTaskScreen
-import com.androidint.todo.screen.addtask.AddTaskViewModel
+import com.androidint.todo.screen.addtask.TaskElementScreen
+import com.androidint.todo.screen.addtask.TaskElementViewModel
 import com.androidint.todo.screen.mainPage.MainPageCompose
 import com.androidint.todo.screen.mainPage.MainPageViewModel
 import com.androidint.todo.screen.timeline.TimeLineScreen
@@ -21,9 +23,7 @@ fun MainNavGraph(
     navHostController: NavHostController,
     showSnackBar: (message: String, scope: CoroutineScope) -> Unit
 ) {
-
     NavHost(navController = navHostController, startDestination = Screens.main_page) {
-
         composable(route = Screens.main_page) {
             val mainPageViewModel = hiltViewModel<MainPageViewModel>()
             MainPageCompose(
@@ -34,26 +34,29 @@ fun MainNavGraph(
                 mainPageViewModel::doneCurrentTask
             )
         }
-
-        composable(route = Screens.add_task+"/{taskId}",arguments = listOf(navArgument("taskId"){
-            type= NavType.IntType
-        })) {
-            val viewModelAddTask = hiltViewModel<AddTaskViewModel>()
-            AddTaskScreen(
-                taskId = it.arguments?.getInt("taskId"),
-                conflictedDurationState = viewModelAddTask.conflictedDurationState,
-                conflictedCategoryState = viewModelAddTask.conflictedCategoryState,
-                categoryList = viewModelAddTask.categoryList,
-                updateRequest = viewModelAddTask.updateRequest,
-                addTask = viewModelAddTask::addTask,
-                updateTask = viewModelAddTask::updateTask,
-                successfullyDone = viewModelAddTask.successfullyDone,
-                onSuccessfullyDone = viewModelAddTask::onSuccessfullyDone,
-                showSnackbar = showSnackBar
+        composable(
+            route = Screens.add_task+"?taskId={taskId}",
+            arguments = listOf(navArgument("taskId")
+            {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            }
             )
-
+        ) {
+            val viewModelAddTask = hiltViewModel<TaskElementViewModel>()
+            it.arguments?.getLong("taskId")?.let { taskId -> viewModelAddTask.initTask(taskId) }
+           TaskElementScreen(
+               task = viewModelAddTask.task,
+               category = viewModelAddTask.category,
+               categories = viewModelAddTask.categories,
+               addTask = viewModelAddTask::addTask,
+               updateTask = viewModelAddTask::updateTask,
+               addTaskState = it.arguments?.getInt("taskId") != null,
+               tagList = viewModelAddTask.tags,
+               pushTaskState = viewModelAddTask.submitDataState
+           )
         }
-
         composable(route = Screens.timeline) {
             val viewModelTimeLineTask = hiltViewModel<TimeLineViewModel>()
             TimeLineScreen(
@@ -66,11 +69,7 @@ fun MainNavGraph(
                 monthName = viewModelTimeLineTask.monthName,
                 tasks = viewModelTimeLineTask.tasks,
                 categories = viewModelTimeLineTask.categories
-
             )
-
         }
-
-
     }
 }

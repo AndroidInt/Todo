@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(private val categoryDao: CategoryDao) {
 
-    suspend fun insert(category: Category): Int {
+    suspend fun insert(category: Category): Long {
         return categoryDao.insert(category)
     }
 
@@ -20,7 +20,7 @@ class CategoryRepositoryImpl @Inject constructor(private val categoryDao: Catego
         categoryDao.delete(category)
     }
 
-    suspend fun findById(id: Int): Category? {
+    suspend fun findById(id: Long): Category? {
         return categoryDao.findById(id)
     }
 
@@ -32,7 +32,7 @@ class CategoryRepositoryImpl @Inject constructor(private val categoryDao: Catego
         return categoryDao.getCategoryByColor(color)
     }
 
-    suspend fun updateCategory(category: Category):Int {
+    suspend fun updateCategory(category: Category) {
         return categoryDao.updateCategory(category)
     }
 

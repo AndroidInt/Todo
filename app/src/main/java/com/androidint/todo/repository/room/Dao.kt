@@ -21,7 +21,7 @@ interface TaskDao {
 
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(task: Task): Int
+    suspend fun insert(task: Task): Long
 
     @Query("SELECT * FROM Task")
     fun getAll(): Flow<List<Task>>
@@ -33,7 +33,7 @@ interface TaskDao {
     suspend fun delete(task: Task)
 
     @Query("SELECT * FROM TASK T WHERE T.taskId ==:id")
-    suspend fun findById(id: Int): Task?
+    suspend fun findById(id: Long): Task?
 
 
     @Transaction
@@ -41,24 +41,26 @@ interface TaskDao {
     fun getCategoriesWithTasks(): Flow<List<CategoryWithTasks>>
 
     @Update
-    suspend fun updateTask(task: Task): Int
+    suspend fun updateTask(task: Task)
 
     @Query("SELECT * FROM TASK WHERE day_dayOfMonth ==:day AND day_month==:month AND day_year==:year")
     fun getTaskByDate(year: Int, month: Int, day: Int): Flow<List<Task>>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertTag(tag: Tag):Int
+    suspend fun insertTag(tag: Tag):Long
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertTags(tags: List<Tag>):List<Int>
+    suspend fun insertTags(tags: List<Tag>):List<Long>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertTaskTagCrossRef(taskTags: List<TaskTagCrossRef>)
 
     @Query("Select * From Task")
     fun getTaskWithTags(): Flow<List<TaskWithTags>>
+
+    @Transaction
     @Query("Select * From Task Where taskId ==:id")
-    fun getTaskWithTags(id: Int): TaskWithTags
+    fun getTaskWithTags(id: Long): TaskWithTags
 
     @Query("Select * From Tag")
     fun getTagWithTasks(): Flow<List<TagWithTasks>>
@@ -73,7 +75,7 @@ interface TaskDao {
 interface CategoryDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(category: Category): Int
+    suspend fun insert(category: Category): Long
 
     @Query("SELECT * FROM Category")
     fun getAll(): Flow<List<Category>>
@@ -82,7 +84,7 @@ interface CategoryDao {
     suspend fun delete(category: Category)
 
     @Query("SELECT * FROM Category T WHERE T.categoryId ==:id")
-    suspend fun findById(id: Int): Category?
+    suspend fun findById(id: Long): Category?
 
     @Query("SELECT * FROM Category T WHERE T.name == :name")
     suspend fun getCategoryByName(name: String): Category?
@@ -92,7 +94,7 @@ interface CategoryDao {
 
 
     @Update(onConflict = OnConflictStrategy.ABORT)
-    suspend fun updateCategory(category: Category):Int
+    suspend fun updateCategory(category: Category)
 
     @Query("Select * From Category T WHERE T.name==:name")
     suspend fun contain(name: String): Category?

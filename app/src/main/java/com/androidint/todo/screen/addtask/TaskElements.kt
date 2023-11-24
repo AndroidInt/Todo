@@ -252,12 +252,12 @@ fun CalendarV2(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
+//            .clip(MaterialTheme.shapes.medium)
             .clickable {
                 showCalendar.value = !showCalendar.value
             }
         ,
-        border = if(error.value) BorderStroke(1.dp,borderColor) else null,
+//        border = if(error.value) BorderStroke(1.dp,borderColor) else null,
         elevation = CardDefaults.cardElevation(
             defaultElevation = 24.dp
         )
@@ -520,7 +520,18 @@ fun ColorV2(
                 }
             }
             onSetCategory(
-                Category(name.value, DataStore.colorsV2.indexOf(colorState.value))
+                if (categories.any {
+                    DataStore.colorToCategoryGroup(colorState.value) == it.color
+                    }){
+                    categories.first {
+                        DataStore.colorToCategoryGroup(colorState.value) == it.color
+                    }
+                }else{
+                    Category(
+                        name.value,
+                        DataStore.colorsV2.indexOf(colorState.value)
+                    )
+                    }
             )
         }
     }

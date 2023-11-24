@@ -27,13 +27,13 @@ data class Task(
     val description: String?,
     @Embedded(prefix = "day_")
     val day: Day,
-    var ownerCategoryId: Int,
+    var ownerCategoryId: Long,
     @Embedded
     val timeDuration: TimeTask,
     val priority: Int = 1,
     var done: Boolean = false,
     @PrimaryKey(autoGenerate = true)
-    var taskId: Int? = null,
+    var taskId: Long? = null,
 
 ) :Parcelable
 
@@ -41,12 +41,14 @@ data class Task(
 data class Tag(
     val name: String,
     @PrimaryKey(autoGenerate = true)
-    val tagId: Int? = null
+    val tagId: Long? = null
 )
 @Entity(primaryKeys = ["taskId","tagId"])
 data class TaskTagCrossRef(
-    val taskId: Int,
-    val tagId:Int
+    val taskId: Long,
+    val tagId:Long,
+//    @PrimaryKey(autoGenerate = true)
+    val id:Long? = null
 )
 
 data class TagWithTasks(
@@ -156,7 +158,7 @@ data class Category(
     @ColumnInfo(name = "name") var name: String = "Inbox",
     @ColumnInfo(name = "color") var color: Int = 0,
     @PrimaryKey(autoGenerate = true)
-    var categoryId: Int? = null,
+    var categoryId: Long? = null,
 ):Parcelable
 
 data class CategoryWithTasks(

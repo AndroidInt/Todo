@@ -29,37 +29,30 @@ import com.androidint.todo.repository.model.Task
 import com.androidint.todo.repository.model.TimeTask
 import saman.zamani.persiandate.PersianDate
 
-sealed class TaskState{
-    class Success(val id :Int): TaskState()
-    object Idle: TaskState()
-    object Proccessing: TaskState()
-
-    class  Error( val message:String?) : TaskState()
+sealed class TaskState {
+    object Success : TaskState()
+    object Loading : TaskState()
+    object Idle : TaskState()
+    class Error(val message: String?) : TaskState()
 }
 
 
 @Composable
 fun TaskElementScreen(
     task: State<Task?>,
-//    title: State<String> = remember { mutableStateOf("") },
-//    description: State<String> = remember { mutableStateOf("") },
-//    duration: State<TimeTask> = remember { mutableStateOf(TimeTask()) },
-//    year: State<Int> = remember { mutableStateOf(PersianDate().grgYear) },
-//    month: State<Int> = remember { mutableStateOf(PersianDate().grgMonth) },
-//    day: State<Int> = remember { mutableStateOf(PersianDate().grgDay) },
     category: State<Category> = remember { mutableStateOf(Category()) },
-    setCategory: (category: Category)-> Unit = {},
     categories: SnapshotStateList<Category> = remember { mutableStateListOf() },
-    addTask: (task: Task, tags: List<Tag>,category: Category) -> Unit = {_,_,_ -> },
-    updateTask: (task: Task, tags: List<Tag>,category: Category) -> Unit = {_,_,_ -> },
-    addTaskState: State<Boolean> = remember { mutableStateOf(true) },
+    addTask: (task: Task, tags: List<Tag>, category: Category) -> Unit = { _, _, _ -> },
+    updateTask: (task: Task, tags: List<Tag>, category: Category) -> Unit = { _, _, _ -> },
+    addTaskState: Boolean = true,
     tagList: SnapshotStateList<Tag> = remember { mutableStateListOf() },
-    onPushTaskState: State<TaskState>
+    pushTaskState: State<TaskState> = remember { mutableStateOf(TaskState.Idle) }
 ) {
+
     val date = PersianDate()
     val initTitle = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 ""
             } else {
                 task.value!!.title
@@ -68,7 +61,7 @@ fun TaskElementScreen(
     }
     val initDescription = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 ""
             } else {
                 task.value!!.description.toString()
@@ -77,7 +70,7 @@ fun TaskElementScreen(
     }
     val initDuration = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 TimeTask(0, 0, 0, 0)
             } else {
                 task.value!!.timeDuration
@@ -86,7 +79,7 @@ fun TaskElementScreen(
     }
     val initYear = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 date.grgYear
             } else {
                 task.value!!.day.year
@@ -95,7 +88,7 @@ fun TaskElementScreen(
     }
     val initMonth = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 date.grgMonth
             } else {
                 task.value!!.day.month
@@ -104,7 +97,7 @@ fun TaskElementScreen(
     }
     val initDay = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 date.grgDay
             } else {
                 task.value!!.day.dayOfMonth
@@ -113,7 +106,7 @@ fun TaskElementScreen(
     }
     val initDayOfWeek = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 var dayOfWeek = date.dayOfWeek() - date.grgDay.mod(7) - 1
                 if (dayOfWeek < 0) dayOfWeek += 7
                 dayOfWeek
@@ -124,7 +117,7 @@ fun TaskElementScreen(
     }
     val initCategory = remember {
         mutableStateOf(
-            if (addTaskState.value) {
+            if (addTaskState) {
                 Category()
             } else {
                 category.value
@@ -133,13 +126,13 @@ fun TaskElementScreen(
     }
 
     val initTagList =
-        if (tagList.isNotEmpty()){
+        if (tagList.isNotEmpty()) {
             remember {
                 mutableStateListOf<Tag>()
             }.also {
                 it.addAll(tagList.toList())
             }
-        }else{
+        } else {
             remember {
                 mutableStateListOf<Tag>()
             }
@@ -170,7 +163,7 @@ fun TaskElementScreen(
                 initDuration.value.endHour,
                 initDuration.value.endMinute,
                 onSetDuration = { sh, sm, eh, em ->
-                    val timeTask = TimeTask(sh,sm,eh,em)
+                    val timeTask = TimeTask(sh, sm, eh, em)
                     initDuration.value = timeTask
                 }
             )
@@ -189,7 +182,6 @@ fun TaskElementScreen(
                 categories = categories.toList(),
                 onSetCategory = {
                     initCategory.value = it
-                    setCategory(it)
                 },
                 category = category.value
             )
@@ -217,15 +209,15 @@ fun TaskElementScreen(
                         month = initMonth.value,
                         year = initYear.value
                     ),
-                    if (initCategory.value.categoryId == null) 0 else initCategory.value.categoryId!!,
+                    if (initCategory.value.categoryId == null) 0L else initCategory.value.categoryId!!,
                     timeDuration = initDuration.value,
                     1,
                     done = false
                 )
-                if (addTaskState.value) {
-                    addTask(task,initTagList.toList(),initCategory.value)
+                if (addTaskState) {
+                    addTask(task, initTagList.toList(), initCategory.value)
                 } else {
-                    updateTask(task,initTagList.toList(),initCategory.value)
+                    updateTask(task, initTagList.toList(), initCategory.value)
                 }
             },
                 modifier = Modifier
@@ -236,12 +228,13 @@ fun TaskElementScreen(
                 enabled = initTitle.value.isNotEmpty() && initDuration.value.eventDuration() > 9 && initCategory.value.name.isNotEmpty()
 
             ) {
-                Text(text =
-                if (addTaskState.value){
-                    "Add task"
-                }else{
-                    "Update Task"
-                }
+                Text(
+                    text =
+                    if (addTaskState) {
+                        "Add task"
+                    } else {
+                        "Update Task"
+                    }
                 )
             }
         }
@@ -256,15 +249,15 @@ fun ShowTaskElementScreen() {
     var list = remember {
         mutableStateListOf<Category>()
     }
-    val cat = Category("AOSP",3)
+    val cat = Category("AOSP", 3)
     list.add(cat)
     TaskElementScreen(
         task = remember {
             mutableStateOf(null)
         },
-        addTaskState = remember { mutableStateOf(true) },
+        addTaskState = true,
         categories = list,
 //        category = remember{ mutableStateOf(cat)}
-        onPushTaskState =  remember{ mutableStateOf(TaskState.Error(""))}
+        pushTaskState = remember { mutableStateOf(TaskState.Error("")) }
     )
 }

@@ -7,7 +7,7 @@ data class TaskWithCategoryName(
     val description: String?,
     @Embedded
     val day: Day,
-    val ownerCategoryId: Int,
+    val ownerCategoryId: Long,
     @Embedded
     val timeDuration: TimeTask,
     val priority: Int = 1,
