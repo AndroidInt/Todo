@@ -1,7 +1,6 @@
 package com.androidint.todo.repository
 
 import android.util.Log
-import androidx.lifecycle.asLiveData
 import androidx.room.withTransaction
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Tag
@@ -11,7 +10,6 @@ import com.androidint.todo.repository.room.TodoDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 class MediumRepositoryImpl @Inject constructor(
@@ -31,10 +29,12 @@ class MediumRepositoryImpl @Inject constructor(
     }
 
     suspend fun updateTask(task: Task, tags: List<Tag>, category: Category) {
-        todoDatabase.withTransaction {
-            addOrUpdateCategory(category)
-            taskRepository.updateTask(task)
-            changeTagsTask(task, tags)
+        withContext(Dispatchers.IO) {
+            todoDatabase.withTransaction {
+                addOrUpdateCategory(category)
+                taskRepository.updateTask(task)
+                changeTagsTask(task, tags)
+            }
         }
     }
 
@@ -63,6 +63,8 @@ class MediumRepositoryImpl @Inject constructor(
 
     private suspend fun insertTagsByTask(taskId: Long, tags: List<Tag>) {
         val tagsId = taskRepository.insertTags(tags)
+        Log.d("TaskComplete", "tagIds : ${tagsId.toString()}")
+
         val taskTagsList = mutableListOf<TaskTagCrossRef>()
         tagsId.forEach {
             taskTagsList.add(TaskTagCrossRef(taskId, it))
@@ -71,15 +73,22 @@ class MediumRepositoryImpl @Inject constructor(
     }
 
     private suspend fun addOrUpdateCategory(category: Category): Long {
-
+        var extractedCategory: Category? = null
         val categories = categoryRepository.getAll().firstOrNull()
-        val updateOperate = categories.any {
+        val updateOperate = categories?.any { it ->
+            if (category.color == it.color)
+                extractedCategory = it
             category.color == it.color
         }
-        return if (updateOperate) {
-            updateCategory(category)
-            -1
+        return if (updateOperate == true) {
+            Log.d("TaskComplete", "task : updated category block")
+            Log.d("TaskComplete", "category Id : ${extractedCategory!!.categoryId}")
+            if (category.name != extractedCategory!!.name)
+                updateCategory(category)
+            extractedCategory!!.categoryId!!
         } else {
+            Log.d("TaskComplete", "insert category")
+
             addCategory(category)
         }
     }

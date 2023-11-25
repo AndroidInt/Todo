@@ -46,198 +46,217 @@ fun TaskElementScreen(
     updateTask: (task: Task, tags: List<Tag>, category: Category) -> Unit = { _, _, _ -> },
     addTaskState: Boolean = true,
     tagList: SnapshotStateList<Tag> = remember { mutableStateListOf() },
-    pushTaskState: State<TaskState> = remember { mutableStateOf(TaskState.Idle) }
+    fetchDataState: State<TaskState> = remember { mutableStateOf(TaskState.Idle) },
+    inputValidation: SnapshotStateList<ErrorValidation> = remember { mutableStateListOf() },
+    validateInput: (timeTask: TimeTask, day: Day, category: Category) -> Unit
 ) {
 
-    val date = PersianDate()
-    val initTitle = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                ""
-            } else {
-                task.value!!.title
-            }
-        )
-    }
-    val initDescription = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                ""
-            } else {
-                task.value!!.description.toString()
-            }
-        )
-    }
-    val initDuration = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                TimeTask(0, 0, 0, 0)
-            } else {
-                task.value!!.timeDuration
-            }
-        )
-    }
-    val initYear = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                date.grgYear
-            } else {
-                task.value!!.day.year
-            }
-        )
-    }
-    val initMonth = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                date.grgMonth
-            } else {
-                task.value!!.day.month
-            }
-        )
-    }
-    val initDay = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                date.grgDay
-            } else {
-                task.value!!.day.dayOfMonth
-            }
-        )
-    }
-    val initDayOfWeek = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                var dayOfWeek = date.dayOfWeek() - date.grgDay.mod(7) - 1
-                if (dayOfWeek < 0) dayOfWeek += 7
-                dayOfWeek
-            } else {
-                task.value!!.day.dayOfWeek
-            }
-        )
-    }
-    val initCategory = remember {
-        mutableStateOf(
-            if (addTaskState) {
-                Category()
-            } else {
-                category.value
-            }
-        )
-    }
+    if (fetchDataState.value == TaskState.Success) {
 
-    val initTagList =
-        if (tagList.isNotEmpty()) {
-            remember {
-                mutableStateListOf<Tag>()
-            }.also {
-                it.addAll(tagList.toList())
-            }
-        } else {
-            remember {
-                mutableStateListOf<Tag>()
-            }
-        }
 
-    val buttonHeight = remember { mutableStateOf(0) }
-    Box(
-        modifier = Modifier
-            .padding(16.dp)
-    ) {
-        Column(
-            modifier = Modifier
-
-                .verticalScroll(rememberScrollState())
-        ) {
-
-            TitleInputV2(
-                initTitle
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            DescriptionInputV2(
-                initDescription
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Clock(
-                initDuration.value.startHour,
-                initDuration.value.startMinute,
-                initDuration.value.endHour,
-                initDuration.value.endMinute,
-                onSetDuration = { sh, sm, eh, em ->
-                    val timeTask = TimeTask(sh, sm, eh, em)
-                    initDuration.value = timeTask
-                }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            CalendarV2(
-                initYear, initMonth, initDay,
-                onSelectDate = { selectDayOfWeek, selectDay, selectMonth, selectYear ->
-                    initDayOfWeek.value = selectDayOfWeek
-                    initDay.value = selectDay
-                    initMonth.value = selectMonth
-                    initYear.value = selectYear
-                }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            ColorV2(
-                categories = categories.toList(),
-                onSetCategory = {
-                    initCategory.value = it
-                },
-                category = category.value
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            AddTag(initTagList, setTag = {
-                initTagList.add(it)
-            })
-
-            Spacer(modifier = Modifier.height(8.dp))
-            Notify()
-
-            Spacer(modifier = Modifier.height(buttonHeight.value.dp))
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            Button(onClick = {
-                val task = Task(
-                    initTitle.value, initDescription.value,
-                    Day(
-                        dayOfWeek = initDayOfWeek.value,
-                        dayOfMonth = initDay.value,
-                        month = initMonth.value,
-                        year = initYear.value
-                    ),
-                    if (initCategory.value.categoryId == null) 0L else initCategory.value.categoryId!!,
-                    timeDuration = initDuration.value,
-                    1,
-                    done = false
-                )
+        val date = PersianDate()
+        val initTitle = remember {
+            mutableStateOf(
                 if (addTaskState) {
-                    addTask(task, initTagList.toList(), initCategory.value)
+                    ""
                 } else {
-                    updateTask(task, initTagList.toList(), initCategory.value)
+                    task.value!!.title
                 }
-            },
-                modifier = Modifier
-                    .onGloballyPositioned {
-                        buttonHeight.value = it.size.height / 2
-                    }
-                    .fillMaxWidth(),
-                enabled = initTitle.value.isNotEmpty() && initDuration.value.eventDuration() > 9 && initCategory.value.name.isNotEmpty()
+            )
+        }
+        val initDescription = remember {
+            mutableStateOf(
+                if (addTaskState) {
+                    ""
+                } else {
+                    task.value!!.description.toString()
+                }
+            )
+        }
+        val initDuration = remember {
+            mutableStateOf(
+                if (addTaskState) {
+                    TimeTask(0, 0, 0, 0)
+                } else {
+                    task.value!!.timeDuration
+                }
+            )
+        }
+        val initYear = remember {
+            mutableStateOf(
+                if (addTaskState) {
+                    date.grgYear
+                } else {
+                    task.value!!.day.year
+                }
+            )
+        }
+        val initMonth = remember {
+            mutableStateOf(
+                if (addTaskState) {
+                    date.grgMonth
+                } else {
+                    task.value!!.day.month
+                }
+            )
+        }
+        val initDay = remember {
+            mutableStateOf(
+                if (addTaskState) {
+                    date.grgDay
+                } else {
+                    task.value!!.day.dayOfMonth
+                }
+            )
+        }
+        val initDayOfWeek = remember {
+            mutableStateOf(
+                if (addTaskState) {
+                    var dayOfWeek = date.dayOfWeek() - date.grgDay.mod(7) - 1
+                    if (dayOfWeek < 0) dayOfWeek += 7
+                    dayOfWeek
+                } else {
+                    task.value!!.day.dayOfWeek
+                }
+            )
+        }
+        val initCategory = remember {
+            mutableStateOf(
+                if (addTaskState) {
+                    Category()
+                } else {
+                    category.value
+                }
+            )
+        }
 
-            ) {
-                Text(
-                    text =
-                    if (addTaskState) {
-                        "Add task"
-                    } else {
-                        "Update Task"
-                    }
-                )
+        val initTagList = remember {
+            tagList.ifEmpty {
+                mutableStateListOf<Tag>()
             }
         }
+
+        val buttonHeight = remember { mutableStateOf(0) }
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+
+                    .verticalScroll(rememberScrollState())
+            ) {
+
+                TitleInputV2(
+                    initTitle
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                DescriptionInputV2(
+                    initDescription
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Clock(
+                    initDuration.value.startHour,
+                    initDuration.value.startMinute,
+                    initDuration.value.endHour,
+                    initDuration.value.endMinute,
+                    onSetDuration = { sh, sm, eh, em ->
+                        val timeTask = TimeTask(sh, sm, eh, em)
+                        initDuration.value = timeTask
+                        val day =
+                            Day(initDayOfWeek.value, initDay.value, initMonth.value, initYear.value)
+                        validateInput(timeTask, day, initCategory.value)
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                CalendarV2(
+                    initYear, initMonth, initDay,
+                    onSelectDate = { selectDayOfWeek, selectDay, selectMonth, selectYear ->
+                        initDayOfWeek.value = selectDayOfWeek
+                        initDay.value = selectDay
+                        initMonth.value = selectMonth
+                        initYear.value = selectYear
+
+                        val day =
+                            Day(initDayOfWeek.value, initDay.value, initMonth.value, initYear.value)
+                        validateInput(
+                            initDuration.value,
+                            day,
+                            initCategory.value
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ColorV2(
+                    categories = categories.toList(),
+                    onSetCategory = {
+                        initCategory.value = it
+                        val day =
+                            Day(initDayOfWeek.value, initDay.value, initMonth.value, initYear.value)
+                        validateInput(
+                            initDuration.value,
+                            day,
+                            initCategory.value
+                        )
+
+                    },
+                    category = category.value
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                AddTag(initTagList, setTag = {
+                    initTagList.add(it)
+                })
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Notify()
+
+                Spacer(modifier = Modifier.height(buttonHeight.value.dp))
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Button(onClick = {
+                    val task = Task(
+                        initTitle.value, initDescription.value,
+                        Day(
+                            dayOfWeek = initDayOfWeek.value,
+                            dayOfMonth = initDay.value,
+                            month = initMonth.value,
+                            year = initYear.value
+                        ),
+                        if (initCategory.value.categoryId == null) 0L else initCategory.value.categoryId!!,
+                        timeDuration = initDuration.value,
+                        1,
+                        done = false
+                    )
+                    if (addTaskState) {
+                        addTask(task, initTagList.toList(), initCategory.value)
+                    } else {
+                        updateTask(task, initTagList.toList(), initCategory.value)
+                    }
+                },
+                    modifier = Modifier
+                        .onGloballyPositioned {
+                            buttonHeight.value = it.size.height / 2
+                        }
+                        .fillMaxWidth(),
+                    enabled = initTitle.value.isNotEmpty() && initDuration.value.eventDuration() > 9 && initCategory.value.name.isNotEmpty() && inputValidation.isEmpty()
+
+                ) {
+                    Text(
+                        text =
+                        if (addTaskState) {
+                            "Add task"
+                        } else {
+                            "Update Task"
+                        }
+                    )
+                }
+            }
+        }
+
     }
 
 
@@ -257,7 +276,10 @@ fun ShowTaskElementScreen() {
         },
         addTaskState = true,
         categories = list,
+        validateInput = { _, _, _ ->
+
+        }
 //        category = remember{ mutableStateOf(cat)}
-        pushTaskState = remember { mutableStateOf(TaskState.Error("")) }
+//        pushTaskState = remember { mutableStateOf(TaskState.Error("")) }
     )
 }

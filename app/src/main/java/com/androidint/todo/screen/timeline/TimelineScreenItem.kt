@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,29 +18,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +40,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,12 +49,10 @@ import androidx.compose.ui.unit.dp
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Day
 import com.androidint.todo.repository.model.Task
-import com.androidint.todo.repository.model.TimeTask
-import com.androidint.todo.ui.theme.TodoTheme
 import com.androidint.todo.utils.DataStore
+import com.androidint.todo.utils.Screens
 import saman.zamani.persiandate.PersianDate
 import java.io.Serializable
-import java.util.Calendar
 import kotlin.math.roundToInt
 
 fun Modifier.bottomBorder(strokeWidth: Dp, color: Color) = composed(
@@ -95,6 +76,7 @@ fun Modifier.bottomBorder(strokeWidth: Dp, color: Color) = composed(
 
 @Composable
 fun EventLayout(
+    navigate:(destination:String)->Unit,
     modifier: Modifier = Modifier,
     tasks: List<Task>,
     categories: List<Category>,
@@ -110,8 +92,8 @@ fun EventLayout(
 //            BasicSidebarLabel(hour, minute)
 //        }
 //    },
-    content: @Composable (task: Task, category: Category) -> Unit = { task, category ->
-        BasicEvent(task = task, category = category)
+    content: @Composable (task: Task, category: Category,navigate:(destination:String)->Unit) -> Unit = { task, category,navigate ->
+        BasicEvent(task = task, category = category, navigate = navigate)
     }
 ) {
 
@@ -175,7 +157,7 @@ fun EventLayout(
                         it.categoryId == task.ownerCategoryId
                     }
                     category?.let {
-                        content(task, category)
+                        content(task, category,navigate)
                     }
 
                 }
@@ -315,7 +297,8 @@ fun Modifier.taskData(task: Task?, timeBarExist: Boolean) =
 fun BasicEvent(
     modifier: Modifier = Modifier,
     task: Task,
-    category: Category
+    category: Category,
+    navigate: (destination : String)->Unit
 ) {
 
     Column {
@@ -370,8 +353,12 @@ fun BasicEvent(
 
                         Text(text = "Edit", modifier = Modifier
                             .weight(1F)
-                            .clickable {
+                            .clickable{
+                                      navigate(Screens.add_task+"?taskId=${task.taskId}")
+//                                Log.d("transfer id","send taskId : ${task.taskId}")
+
 //                            TODO("go to update task page with the information navGraph")
+
 
                             }, textAlign = TextAlign.End)
 

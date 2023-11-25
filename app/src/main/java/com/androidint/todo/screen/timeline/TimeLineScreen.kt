@@ -1,14 +1,12 @@
 package com.androidint.todo.screen.timeline
 
-import android.util.Log
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -21,29 +19,24 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import saman.zamani.persiandate.PersianDate
-
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.State
-
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.androidint.todo.repository.model.Category
 import com.androidint.todo.repository.model.Day
-
 import com.androidint.todo.repository.model.Task
+import saman.zamani.persiandate.PersianDate
 
 @Composable
 fun TimeLineScreen(
+    navigate:(destination:String)->Unit,
     month: State<Int>,
     previousMonth: () -> Unit,
     nextMonth: () -> Unit,
@@ -155,6 +148,7 @@ fun TimeLineScreen(
 
         val rememberScrollState = rememberScrollState()
         EventLayout(
+            navigate = navigate,
             modifier = Modifier
                 .verticalScroll(rememberScrollState),
             tasks = tasks.toList(),

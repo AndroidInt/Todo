@@ -2,13 +2,11 @@ package com.androidint.todo
 
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.androidint.todo.screen.addtask.AddTaskScreen
 import com.androidint.todo.screen.addtask.TaskElementScreen
 import com.androidint.todo.screen.addtask.TaskElementViewModel
 import com.androidint.todo.screen.mainPage.MainPageCompose
@@ -45,21 +43,27 @@ fun MainNavGraph(
             )
         ) {
             val viewModelAddTask = hiltViewModel<TaskElementViewModel>()
-            it.arguments?.getLong("taskId")?.let { taskId -> viewModelAddTask.initTask(taskId) }
+            it.arguments?.getString("taskId")?.let { taskId ->
+                viewModelAddTask.initTask(taskId.toLong())
+            }
+//            val waitToFetchTask = viewModelAddTask.submitDataState.value.
            TaskElementScreen(
                task = viewModelAddTask.task,
                category = viewModelAddTask.category,
                categories = viewModelAddTask.categories,
                addTask = viewModelAddTask::addTask,
                updateTask = viewModelAddTask::updateTask,
-               addTaskState = it.arguments?.getInt("taskId") != null,
+               addTaskState = it.arguments?.getString("taskId") == null,
                tagList = viewModelAddTask.tags,
-               pushTaskState = viewModelAddTask.submitDataState
+               fetchDataState = viewModelAddTask.submitDataState,
+               inputValidation = viewModelAddTask.stateErrorValidation,
+               validateInput = viewModelAddTask::validateInput
            )
         }
         composable(route = Screens.timeline) {
             val viewModelTimeLineTask = hiltViewModel<TimeLineViewModel>()
             TimeLineScreen(
+                navHostController::navigate,
                 month = viewModelTimeLineTask.month,
                 previousMonth = viewModelTimeLineTask::previousMonth,
                 nextMonth = viewModelTimeLineTask::nextMonth,
