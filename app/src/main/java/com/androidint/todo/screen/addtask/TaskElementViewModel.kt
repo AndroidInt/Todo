@@ -64,7 +64,6 @@ class TaskElementViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             categoryRepository.getAll().collect {
-                _categories = mutableStateListOf()
                 _categories.addAll(it)
             }
         }
@@ -81,7 +80,7 @@ class TaskElementViewModel @Inject constructor(
     }
 
     private suspend fun categoryValidation(category: Category) {
-       val categories = categoryRepository.getAll().firstOrNull()
+        val categories = categoryRepository.getAll().firstOrNull()
         var conflict = false
         conflict = categories?.let { list ->
             list.any {
@@ -94,7 +93,7 @@ class TaskElementViewModel @Inject constructor(
     }
 
 
-    private suspend fun timeDateValidation(timeTask: TimeTask, day: Day){
+    private suspend fun timeDateValidation(timeTask: TimeTask, day: Day) {
         val tasks =
             taskRepository.getTaskByDate(day.year, day.month, day.dayOfMonth).firstOrNull()
         var conflict = false
@@ -103,7 +102,7 @@ class TaskElementViewModel @Inject constructor(
                 timeTask.isConflicted(it.timeDuration)
             }
         } == true
-        withContext(Dispatchers.Main){
+        withContext(Dispatchers.Main) {
             if (conflict) _stateInputValueValidation.add(ErrorValidation.TimeDate)
         }
 
@@ -113,7 +112,7 @@ class TaskElementViewModel @Inject constructor(
     fun initTask(taskId: Long) {
         _submitDataState.value = TaskState.Loading
         viewModelScope.launch {
-            val taskTags =  taskRepository.getTaskWithTags(taskId)
+            val taskTags = taskRepository.getTaskWithTags(taskId)
             _task.value = taskTags.task
             task.value?.let {
                 categoryRepository.findById(it.ownerCategoryId)?.let { category ->

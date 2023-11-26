@@ -1,5 +1,6 @@
 package com.androidint.todo
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -44,6 +45,7 @@ fun MainNavGraph(
         ) {
             val viewModelAddTask = hiltViewModel<TaskElementViewModel>()
             it.arguments?.getString("taskId")?.let { taskId ->
+                Log.d("taskID", "MainNavGraph: $taskId")
                 viewModelAddTask.initTask(taskId.toLong())
             }
 //            val waitToFetchTask = viewModelAddTask.submitDataState.value.

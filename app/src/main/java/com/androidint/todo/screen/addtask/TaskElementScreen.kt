@@ -51,7 +51,7 @@ fun TaskElementScreen(
     validateInput: (timeTask: TimeTask, day: Day, category: Category) -> Unit
 ) {
 
-    if (fetchDataState.value == TaskState.Success) {
+    if (fetchDataState.value == TaskState.Success || fetchDataState.value == TaskState.Idle) {
 
 
         val date = PersianDate()

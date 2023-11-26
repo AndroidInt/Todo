@@ -2,6 +2,7 @@ package com.androidint.todo.screen.addtask
 
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -390,6 +392,7 @@ fun ColorV2(
     onSetCategory: (category: Category) -> Unit,
     category : Category
 ) {
+    Log.d(, "ColorV2: ${categories.toString()}")
     val initCategory = remember{
         mutableStateOf(
             category
@@ -520,19 +523,24 @@ fun ColorV2(
                 }
             }
             onSetCategory(
+
                 if (categories.any {
                     DataStore.colorToCategoryGroup(colorState.value) == it.color
                     }){
                     categories.first {
+                        if (DataStore.colorToCategoryGroup(colorState.value) == it.color)
+                            Log.d("sent cat", "ColorV2: ${it.toString()}")
                         DataStore.colorToCategoryGroup(colorState.value) == it.color
                     }
                 }else{
+                    Log.d("sent cat", "ColorV2: else bracket ran")
                     Category(
                         name.value,
                         DataStore.colorsV2.indexOf(colorState.value)
                     )
                     }
             )
+
         }
     }
 }
